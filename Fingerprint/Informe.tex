@@ -63,7 +63,7 @@
   \centering
        \begin{subfigure}[t]{0.45\textwidth}
          \centering
-         \includegraphics[scale=1.0]{img/example1_1}
+         \includegraphics[scale=1.0]{img/example1_1.png}
          \caption{Example1\_1}
      \end{subfigure}%
      \quad
@@ -72,7 +72,7 @@
          \includegraphics[scale=1.0]{img/example1_2.png}
          \caption{Example1\_2}
      \end{subfigure}
-    \caption{Original fingerprints}
+    \caption{Original fingerprints.}
 \end{figure}
 
 \textbf{b) } \emph{How many macro-singularities do you observe in each fingerprint?}
@@ -81,25 +81,87 @@ We can see that there is only one macro-singularity in each fingerprint. Specifi
 
 \textbf{c) } \emph{Mark the macro-singularities in the images (deltas and loops).}
 
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.7]{img/msing_1.jpg}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.7]{img/msing_2.jpg}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Macro-singularities (loops).}
+\end{figure}
+
 \section{Exercise 2}
 
 \textbf{a) }\emph{Execute the provided code for Fingerprint Enhancement and paste the resulting image here:}
 
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.96]{img/enhanced_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=1.0]{img/enhanced_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Fingerprint Enhancement}
+\end{figure}
+
+
 \textbf{b) }\emph{What differences do you observe with respect to the original fingerprints?}
 
-Conseguimos continuidad en las crestas papilares.
+Fingerprint enhancement facilitate the identification of ridge-valley structures and hence the features of each fingerprint. More precisely, we achieve a representation where any intermittent stroke of a ridge is replaced with a continuous one.
 
 \section{Exercise 3}
 
 \textbf{a) }\emph{Execute now the code for Quality Maps, and past the resulting quality maps:}
 
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=1.0]{img/qmap_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.96]{img/qmap_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Fingerprint Enhancement}
+\end{figure}
+
 \textbf{b) }\emph{What is the range of values for these quality maps?}
 
+Inspecting each matrix minimum and maximum values, we obtain that for both images the minimum is \( 0 \) and the maximum is \( 0.9991 \) and \(  0.9988 \) for example1 and example2 respectively. Given this, we can assume that the range of values is \( [0, 1] \).
+
 \textbf{c) }\emph{What kind information (apart from the quality) can be inferred from such code?}
+
+Inspecting the given source code, the ``heatmap'' displayed corresponds to a measure of the reliability of the computed orientation of each ridge. In short, this quantity measures the reliability of the computed enhancement of the fingerprint.
+
+Taking a look into our examples, there is one region where the reliability is low (blue), which corresponds to the sharpest point of the loop. This results is intuitive given that those points are the ones where the orientation changes abruptly, leading to less accurate results.
+
 
 \section{Exercise 4}
 
 \emph{Execute the code in order to show the Binarized Fingerprint and the Segmented Fingerprint. Apply different values of quality threshold (0.1, 0.3, 0.6, 0.9) and paste here the resulting images:}
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=0.5]{img/merge_bin}
+  \caption{Example1\_1 and Example1\_2 (first and second row) Binarized and Segmented Fingerprint with thresholds 0.1, 0.3, 0.6 and 0.9 (columns).}
+\end{figure}
 
 \section{Exercise 5}
 
