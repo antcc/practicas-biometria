@@ -10,3 +10,4 @@ __pycache__
 *.fdb_latexmk
 *.synctex.gz
 *.fls
+_minted*
