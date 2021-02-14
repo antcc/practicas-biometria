@@ -6,9 +6,10 @@ clear all
 close all
 clc
 addpath(genpath('.\data'));
+addpath('APPIB/ddbb');
 
 %Load the unkonwn image
-I_input=imread(['.\ddbb\Unknown.png']);
+I_input=imread(['Unknown.png']);
 
 %Based on main.m create a function extract_minutiae.m that outputs the
 %X and Y positions of the minutiae already validated. Find the optimal 
@@ -17,31 +18,32 @@ I_input=imread(['.\ddbb\Unknown.png']);
 
 %For the 19 fingerprints 
 Scores = zeros(1,19);
+
 for i=1:19
     
     %Process the database to read the images
     if i<10
-        nameFingerprint = ['.\ddbb\H000' num2str(i) '.png'];
+        nameFingerprint = ['H000' num2str(i) '.png'];
     else
-        nameFingerprint = ['.\ddbb\H00' num2str(i) '.png'];
+        nameFingerprint = ['H00' num2str(i) '.png'];
     end
     
     %Load one image. 
     
-    %YOUR CODE HERE
+    I=imread(nameFingerprint);
     
     %extract the minutiae. You can call function "extract_minutiae"
    
-    %YOUR CODE HERE
-   
-   %get the matching score making use of the Hough function. Save in the right 
-   %position of the Scores variable
-   
-   %YOUR CODE HERE       
+    [valid_x,valid_y]=extract_minutiae(I);
+
+    %get the matching score making use of the Hough function. Save in the right 
+    %position of the Scores variable
+    
+    Scores(i) = Hough(valid_x_input, valid_y_input, valid_x, valid_y);
    
 end
 
 %extract the image with highest score
 index_maxScores=find(Scores==max(Scores));
-
+fprintf('%g ', Scores);
 fprintf(['The unkown fingerprint corresponds to the same identity to image H',num2str(index_maxScores), '\n'])
