@@ -159,36 +159,127 @@ Inspecting each matrix by hand, we can see that for both images the minimum valu
 
 \textbf{c) }\emph{What kind information (apart from the quality) can be inferred from such code?}
 
-Inspecting the given source code, we conclude that the heat map displayed in Figure \ref{fig:ex3a}} corresponds to a measure of the reliability of the computed orientation for each ridge (by means of the function \verb@ridgeorient@). We can think of this quantity as a measure of the reliability of the computed enhancement for each fingerprint, that is, how well the computed orientation resembles the real outline of the ridge curves.
+Inspecting the given source code, we conclude that the heat map displayed in Figure \ref{fig:ex3a}} corresponds to a measure of the reliability of the computed orientation for each ridge (by means of the function \verb@ridgeorient@). We can think of this quantity as a measure of how well the computed orientation resembles the real outline of the ridge curves.
 
-Taking a look into our examples, there is one region where the reliability is low (blue), which corresponds to the sharpest point of the loop. This results is intuitive given that those points are the ones where the orientation changes abruptly, leading to less accurate results.
+Taking a look at our examples, there is one region in both fingerprints where the reliability is low (blue), which corresponds to the sharpest point of the loop. This phenomenon is to be expected, given that those points are precisely the ones where the orientation changes abruptly, leading to less accurate results.
 
+\newpage
 
-\section{Exercise 4}
+\section*{Exercise 4}
 
-\emph{Execute the code in order to show the Binarized Fingerprint and the Segmented Fingerprint. Apply different values of quality threshold (0.1, 0.3, 0.6, 0.9) and paste here the resulting images:}
+\emph{Execute the code in order to show the Binarized Fingerprint and the Segmented Fingerprint. Apply different values of quality threshold (0.1, 0.3, 0.6, 0.9) and paste here the resulting images.}
 
-\begin{figure}
+The resulting images are shown in Figure \ref{fig:ex4}. First, we plot the binarized fingerprint, that is, a representation where only black-and-white is used (to distinguish the ridge lines from the valleys). Then, we superimpose a mask that delimits the zone of what we can consider a fingerprint (versus the background). Finally, we plot the reliability mask only for the points that exceed a certain reliability threshold.
+
+\begin{figure}[h!]
   \centering
-  \includegraphics[scale=0.5]{img/merge_bin}
-  \caption{Example1\_1 and Example1\_2 (first and second row) Binarized and Segmented Fingerprint with thresholds 0.1, 0.3, 0.6 and 0.9 (columns).}
+  \includegraphics[scale=0.4]{img/merge_bin}
+  \caption{Binarized and Segmented fingerprints with thresholds $0.1, 0.3, 0.6$ and $0.9$. The first row corresponds to \texttt{Example1\_1} and the second one to \texttt{Example1\_2}, while the threshold increases from left to right.}
+  \label{fig:ex4}
 \end{figure}
 
-\section{Exercise 5}
+We can see that as we increase the threshold, more and more points are missing from the final mask (especially the ones around the loops, where the reliability is lower). In the final part of the code, we also ``turn off'' the points that don't pass the threshold test.
+
+\section*{Exercise 5}
 
 \textbf{a) }\emph{Execute the code for generating the Fingerprint Skeleton and the Minutiae Extractor. Paste the resulting images for the original values window=5 and margin=5.}
 
+The Fingerprint Skeleton code aims to make the ridge lines thinner (1px), so that its analysis for extractiig minutiae becomes easier. The Minutiae Extractor then tries to find all relevant minutiae, using a window of a specified size and ignoring the points within a certain distance of the margin of the image. The results are shown in Figure \ref{fig:ex5a}.
+
+We notice that using the default parameters there are several mintuae that are not correctly extracted (in particular, some bifurcations in the first fingerprint are not detected). In addition, we can see that there are many marks in the border of each image, which can be suboptimal, since these minutiae are somewhat artificial and caused by the fact that we don't have a complete image (only a section of the frontal projection of the fingerprint).
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.5]{img/extraction_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.5]{img/extraction_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Fingerprint Skeleton and Minutiae Extractor output with default parameters.}
+    \label{fig:ex5a}
+\end{figure}
+
 \textbf{b) }\emph{Search heuristically by looking at the images for the optimal values of parameters window and margin. Paste the resulting images with your optimal parameters and justify your decision.}
 
-\section{Exercise 6}
+To solve the problems mentioned above, we search heuristically for the best combination of window and margin values. On the one hand, we found that decreasing the window to $3\times 3$ provided better results (all visible minutiae were detected).
 
-\textbf{a) }\emph{Execute the code corresponding to the Minutiae Validation for window=5 and margin=5.  Paste the resulting image including the minutiae extracted (red crosses) and validated (blue circles) of both fingerprints. }
+On the other hand, increasing the margin to a higher value alleviated the problem of wrongly detecting minutiae on the border, since the feasible region is moved away from the border. However, we have to be careful not to increase the margin too much, because then we could lose some genuine minutiae that are close to the border. We found that setting the margin to $11$px was a good compromise.
+
+The resulting images are shown in Figure \ref{fig:ex5b}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.5]{img/extraction_optim_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.5]{img/extraction_optim_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Fingerprint Skeleton and Minutiae Extractor output with optimal parameters.}
+    \label{fig:ex5b}
+\end{figure}
+
+\section*{Exercise 6}
+
+\textbf{a) }\emph{Execute the code corresponding to the Minutiae Validation for window=5 and margin=5.  Paste the resulting image including the minutiae extracted (red crosses) and validated (blue circles) of both fingerprints.}
+
+The minutiae extracted and validated with the default extraction parameters are shown in Figure \ref{fig:ex6a}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.75]{img/ext_val_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.75]{img/ext_val_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Minutiae Validation output with default parameters.}
+    \label{fig:ex6a}
+\end{figure}
 
 \textbf{b) }\emph{Execute the same code but with the optimal values of parameters window and margin. Paste the resulting image below.}
 
+The minutiae extracted and validated with the optimal extraction parameters are shown in Figure \ref{fig:ex6b}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.85]{img/ext_val_optim_1}
+         \caption{Example1\_1}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.85]{img/ext_val_optim_2}
+         \caption{Example1\_2}
+     \end{subfigure}
+    \caption{Minutiae Validation output with optimal parameters.}
+    \label{fig:ex6b}
+\end{figure}
+
 \textbf{c) }\emph{Do you think it is a good idea to include the Minutiae Validation module? Justify your opinion.}
 
-\section{Extra Exercise}
+It is a good idea, because it allows us to retain only those minutiae that are actually relevant for comparing two fingerprints. It isolates the minutiae so that they are easier to compare (reducing noise), and it also lets us correct the possible (non-)minutiae detected on the border.
+
+\newpage
+\section*{Extra Exercise}
 
 \emph{In folder \texttt{/ddbb} you have 20 fingerprint images. 19 of them are labeled with the subject identity (e.g., H0001), and 1 is Unknown. Search for the identity of the Unknown fingerprint in the set of 19 labelled reference fingerprints. You can use the provided code \texttt{identification\_1\_19.m} as basis. Paste here the resulting ranked list of scores of the Unknown fingerprint with respect each one of the 19 reference fingerprints.}
 
