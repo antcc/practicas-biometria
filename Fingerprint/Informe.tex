@@ -184,7 +184,7 @@ We can see that as we increase the threshold, more and more points are missing f
 
 \textbf{a) }\emph{Execute the code for generating the Fingerprint Skeleton and the Minutiae Extractor. Paste the resulting images for the original values window=5 and margin=5.}
 
-The Fingerprint Skeleton code aims to make the ridge lines thinner (1px), so that its analysis for extractiig minutiae becomes easier. The Minutiae Extractor then tries to find all relevant minutiae, using a window of a specified size and ignoring the points within a certain distance of the margin of the image. The results are shown in Figure \ref{fig:ex5a}.
+The Fingerprint Skeleton code aims to make the ridge lines thinner (1px), so that its analysis for extracting minutiae becomes easier. The Minutiae Extractor then tries to find all relevant minutiae, using a window of a specified size and ignoring the points within a certain distance of the margin of the image. The results are shown in Figure \ref{fig:ex5a}.
 
 We notice that using the default parameters there are several mintuae that are not correctly extracted (in particular, some bifurcations in the first fingerprint are not detected). In addition, we can see that there are many marks in the border of each image, which can be suboptimal, since these minutiae are somewhat artificial and caused by the fact that we don't have a complete image (only a section of the frontal projection of the fingerprint).
 
@@ -328,7 +328,7 @@ As we can see, the fingerprint number 13 is the winner, obtaining a coincidence 
 \[
 \{\texttt{extract\_window}=3, \texttt{ extract\_margin}=11, \texttt{ validation\_window}=3\}
 \]
-The scores obtained are displayed on Table \ref{tab:2}. In this case, the score of fingerprint $\#13$ increases to $65\%$, while the scores for the rest of the prints remain relatively low.
+The scores obtained are displayed on Table \ref{tab:2}. In this case, the score of fingerprint $13$ increases to $65\%$, while the scores for the rest of the prints remain relatively low.
 
 \begin{table}[h!]
   \centering
@@ -351,7 +351,7 @@ The scores obtained are displayed on Table \ref{tab:2}. In this case, the score 
 \{\texttt{extract\_window}=3, \texttt{ extract\_margin}=7, \texttt{ validation\_window}=3\}
 \]
 
-The scores obtained are shown in Table \ref{tab:3}. As we can see, with this combination of parameters we obtain an even higher score for fingerprint $\#13$, which reaches $76\%$ of coincidence. The downside with this approach is that the scores for the rest of the fingerprints are also higher, but they still remain low enough in comparison to the winner.
+The scores obtained are shown in Table \ref{tab:3}. As we can see, with this combination of parameters we obtain an even higher score for fingerprint $13$, which reaches $76\%$ of coincidence. The downside of this approach is that the scores for the rest of the fingerprints are also higher, but they still remain low enough in comparison to the winner.
 
 \begin{table}[h!]
   \centering
@@ -368,7 +368,7 @@ The scores obtained are shown in Table \ref{tab:3}. As we can see, with this com
 \label{tab:3}
 \end{table}
 
-For this third attempt, we show in Figure \ref{fig:final-minutiae} the validated minutiae for the unkown fingerprint and image number 13, where we can see the coincidences. Based on the previous discussion, we are quite sure that \textbf{the unkown fingerprint corresponds to the 13th fingerprint on the database}.
+For this third attempt (which was the best), we show in Figure \ref{fig:final-minutiae} the validated minutiae for both the unkown fingerprint and image number 13, where we can see the coincidences. Based on the previous discussion, we are quite sure that \textbf{the unkown fingerprint corresponds to the 13th fingerprint on the database}.
 \begin{figure}[h!]
   \centering
        \begin{subfigure}[t]{0.45\textwidth}
