@@ -283,28 +283,107 @@ It is a good idea, because it allows us to retain only those minutiae that are a
 
 \emph{In folder \texttt{/ddbb} you have 20 fingerprint images. 19 of them are labeled with the subject identity (e.g., H0001), and 1 is Unknown. Search for the identity of the Unknown fingerprint in the set of 19 labelled reference fingerprints. You can use the provided code \texttt{identification\_1\_19.m} as basis. Paste here the resulting ranked list of scores of the Unknown fingerprint with respect each one of the 19 reference fingerprints.}
 
-- Extrac_window=3, extract_margin=11; val_window=1:
-Vector de scores:
-`0.186047 0.152542 0.204545 0.153846 0.122066 0.13617 0.173913 0.231884 0.175824 0.176471 0.133333 0.2 0.55 0.197802 0.15873 0.197531 0.204082 0.126984 0.202247`
+In order to compare each fingerprint in the database with the unknown print, we will extract (and validate) the minutiae of each fingerprint and apply the Hough transform to compute the scores between each one of them and the unknown one. To this end, we use the code already implemented in \verb|Hough.m| and we write a function called \verb|extract_minutiae|:
 
----> Extrac_window=3, extract_margin=11; val_window=3 (LA QUE MEJOR VA):
-Vector de scores:
-`0.259887 0.229508 0.26455 0.215385 0.196474 0.195122 0.223776 0.261438 0.224138 0.20339 0.20442 0.235294 0.654206 0.23622 0.203947 0.228916 0.231156 0.2 0.239316`
+\begin{minted}{matlab}
+function [valid_x,valid_y]=extract_minutiae(I, ew, em, vw)
+  ext_window=ew;
+  ext_margin=em;
+  val_window=vw;
+  [~,~,~,~,~,enhI] = fft_enhance_cubs(I, -1);
+  [~, binI,~,~, I1_enhaced] = testfin(enhI);
+  inv_binI = (binI == 0);
+  thin = bwmorph(inv_binI, 'thin', Inf);
+  [minutiae, minutiae_x, minutiae_y,~]=extraction(thin,ext_window,ext_margin);
+  [valid, valid_x, valid_y,~]=validation(thin,minutiae,val_window);
+end
+\end{minted}
 
-- Extrac_window=5, extract_margin=5; val_window=1 (POR DEFECTO DEL PROFESOR):
-Vector de scores:
-`0.205128 0.157895 0.183908 0.15625 0.115385 0.123348 0.170543 0.215385 0.157303 0.168421 0.12844 0.179487 0.526316 0.2 0.156522 0.179487 0.189474 0.122222 0.183908`
+We have tried a total of 4 combinations of the parameters \verb|window| and \verb|margin| for extraction, and \verb|window| for validation. We decided to modify this last parameter to see how it would influence the result.
 
-- Extrac_window=3, extract_margin=7; val_window=3
-Vector de scores:
-`0.323741 0.261628 0.285714 0.281609 0.263692 0.280079 0.287263 0.297872 0.306189 0.251572 0.273543 0.285714 0.766667 0.337748 0.282723 0.268551 0.287671 0.264901 0.278912`
+\textbf{First attempt.} The first combination of parameters chosen was the same as in Exercise 6 (the optimal extraction parameters and the default validation window):
+\[
+\{\texttt{extract\_window}=3, \texttt{ extract\_margin}=11, \texttt{ validation\_window}=1\}
+\]
+We obtained the following scores for each of the 19 fingerprints on the database, shown in Table \ref{tab:1}.
 
-EXTRACT_WINDOW: Si aumenta, aumenta la ventana de referencia.
-EXTRACT_MARGIN: Elimina los puntos en los bordes, cuanto mayor sea. Hemos encontrado que si es <10 encuentra muchos puntos en los bordes.
-VALIDATION_WINDOW: Ventana a partir de la cual borrar puntos. Cuanto mayor es, más puntos borra.
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{ccccccccccc}
+    & \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} & \textbf{#7} & \textbf{#8} & \textbf{#9} & \textbf{#10}\\
+    \hline
+    \textbf{Score}& 0.1860 &0.1525 & 0.2045 & 0.1538& 0.1220& 0.1361& 0.1739 &0.2318& 0.1758& 0.1764\\
 
+    & \textbf{#11} & \textbf{#12} & \textbf{#13} & \textbf{#14} & \textbf{#15} & \textbf{#16} & \textbf{#17} & \textbf{#18} & \textbf{#19}\\
+    \hline
+    \textbf{Score} & 0.1333& 0.2000& \textbf{{\color{red}0.5500}} &0.1978 &0.1587& 0.1975 &0.2040& 0.1269 &0.2022
+\end{tabular}
+\caption{Hough scores for each fingerprint in the first attempt.}
+\label{tab:1}
+\end{table}
 
-Conclusiones:
+As we can see, the fingerprint number 13 is the winner, obtaining a coincidence score of $55\%$, way ahead of the rest of the prints.
 
-- Con más puntos aumenta el score de la 13, pero también aumenta el del resto.
+\textbf{Second attempt.} Next, we decided to slightly increase the validation window:
+\[
+\{\texttt{extract\_window}=3, \texttt{ extract\_margin}=11, \texttt{ validation\_window}=3\}
+\]
+The scores obtained are displayed on Table \ref{tab:2}. In this case, the score of fingerprint $\#13$ increases to $65\%$, while the scores for the rest of the prints remain relatively low.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{ccccccccccc}
+    & \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} & \textbf{#7} & \textbf{#8} & \textbf{#9} & \textbf{#10}\\
+    \hline
+    \textbf{Score}& 0.2598& 0.2295& 0.2645& 0.2153& 0.1964& 0.1951& 0.2237& 0.2614& 0.2241& 0.2033\\
+
+    & \textbf{#11} & \textbf{#12} & \textbf{#13} & \textbf{#14} & \textbf{#15} & \textbf{#16} & \textbf{#17} & \textbf{#18} & \textbf{#19}\\
+    \hline
+    \textbf{Score} & 0.2044& 0.2352& \textbf{\color{red}0.6542}& 0.2362& 0.2039& 0.2289& 0.2311& 0.2000& 0.2393
+\end{tabular}
+\caption{Hough scores for each fingerprint in the second attempt.}
+\label{tab:2}
+\end{table}
+
+\newpage
+\textbf{Third attempt.} Finally, we thought we would try to decrease the value of the extraction margin, since we had increased it quite a bit from the default value:
+\[
+\{\texttt{extract\_window}=3, \texttt{ extract\_margin}=7, \texttt{ validation\_window}=3\}
+\]
+
+The scores obtained are shown in Table \ref{tab:3}. As we can see, with this combination of parameters we obtain an even higher score for fingerprint $\#13$, which reaches $76\%$ of coincidence. The downside with this approach is that the scores for the rest of the fingerprints are also higher, but they still remain low enough in comparison to the winner.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{ccccccccccc}
+    & \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} & \textbf{#7} & \textbf{#8} & \textbf{#9} & \textbf{#10}\\
+    \hline
+    \textbf{Score}& 0.3237& 0.2616& 0.2857& 0.2816& 0.2636& 0.2800& 0.2872& 0.2978& 0.3061& 0.2515\\
+
+    & \textbf{#11} & \textbf{#12} & \textbf{#13} & \textbf{#14} & \textbf{#15} & \textbf{#16} & \textbf{#17} & \textbf{#18} & \textbf{#19}\\
+    \hline
+    \textbf{Score} & 0.2735& 0.2857& \textbf{{\color{red}0.7666}}& 0.3377& 0.2827& 0.2685& 0.2876& 0.2649& 0.2789
+\end{tabular}
+\caption{Hough scores for each fingerprint in the third attempt.}
+\label{tab:3}
+\end{table}
+
+For this third attempt, we show in Figure \ref{fig:final-minutiae} the validated minutiae for the unkown fingerprint and image number 13, where we can see the coincidences. Based on the previous discussion, we are quite sure that \textbf{the unkown fingerprint corresponds to the 13th fingerprint on the database}.
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.425]{img/unknown_3-7-3}
+         \caption{Unknown fingerprint}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.5]{img/13_3-7-3}
+         \caption{Fingerprint 13}
+     \end{subfigure}
+    \caption{Extracted and validated minutiae in the third attempt.}
+    \label{fig:final-minutiae}
+\end{figure}
+
 \end{document}
