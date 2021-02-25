@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=magenta}
+\setlength{\parindent}{0in}
+\usepackage[margin=0.8in]{geometry}
+\usepackage[english]{babel}
+\usepackage{mathtools}
+\usepackage{palatino}
+\usepackage{fancyhdr}
+\usepackage{sectsty}
+\usepackage{engord}
+\usepackage{parskip}
+\usepackage{minted}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage[compact]{titlesec}
+\usepackage[center]{caption}
+\usepackage{placeins}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{todonotes}
+\usepackage{pdfpages}
+% \titlespacing*{\subsection}{0pt}{5.5ex}{3.3ex}
+% \titlespacing*{\section}{0pt}{5.5ex}{1ex}
+\author{Luis Antonio Ortega Andrés\\Antonio Coín Castro}
+\date{}
+\title{Face Biometrics Lab - Report\\\medskip
+\large APRENDIZAJE PROFUNDO PARA PROCESAMIENTO DE INFORMACIÓN BIOMÉTRICA}
+\hypersetup{
+ pdfauthor={Luis Antonio Ortega Andrés},
+ pdftitle={},
+ pdfkeywords={},
+ pdfsubject={},
+ pdflang={Spanish}}}
+
+\begin{document}
+
+\maketitle
+
+\section*{Exercise 1}
+
+\textit{Based on the provided code, run the \texttt{FaceRecognition.m} file and complete the following points.}
+
+\textbf{a)} \emph{Paste one image of the ATT Face Dataset and the corresponding image after using the 2D Discrete Cosine Transform (DCT)}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.8]{}
+         \caption{Original image}
+     \end{subfigure}%
+     \quad
+     \begin{subfigure}[t]{0.45\textwidth}
+         \centering
+         \includegraphics[scale=0.8]{}
+         \caption{DCT representation}
+     \end{subfigure}
+    \caption{Sample face image before and after applying DCT.}
+    \label{fig:ex1a}
+\end{figure}
+
+\textbf{b)} \emph{Using the original configuration parameters (train = 6 images, test = 4 images, DCT coefficients = 10), plot the resulting DET image and indicate the resulting EER.}
+
+\textbf{c)} \emph{Find out the configuration of the DCT coefficients that achieves the best EER results (keeping train = 6 images, test = 4 images). Justify your result, including the resulting DET image and EER value.}
+
+\textbf{d)} \textit{Once the best configuration of the DCT coefficients has been selected (in previous point), analyze the influence of the number of training images in the system performance. Include the EER result achieved for each case (from train = 1 to train = 7). Justify the results.}
+
+\section*{Exercise 2}
+
+\textit{The goal of this task is to change the feature extraction module. Instead of using DCT coefficients as in Task 1, you must consider \textbf{Principal Component Analysis (PCA)} to extract more robust features.}
+
+%You can use the pca.m function available in Matlab. For the training phase, you should follow:
+%[coeff_PCA,MatrixTrainPCAFeats,latent] = pca(MatrixTrainFeats);
+%meanTrainMatrix=mean(MatrixTrainFeats);
+%It is important to remark that the PCA function must be applied once for all training users and samples (not one PCA per user as this would provide specific coeff_PCA parameters per user).
+%For the test phase, you should follow:
+%For each test, subtract the meanTrainMatrix, and multiply by the coeff_PCA transformation matrix in order to obtain the test features in the PCA domain.
+%For more information, check Matlab Help: https://es.mathworks.com/help/stats/pca.html
+
+\textbf{a)} \emph{Using the parameters train = 6 and test = 4, paste the DET curve and indicate the EER when using all the PCA components.}
+
+\textbf{b)} \emph{A key aspect for PCA is the number of components considered. Analyze and represent how the EER value changes in terms of the number of PCA components. Give your explanation about the results achieved.}
+
+\textbf{c)} \textit{Indicate the optimal number of PCA components and paste the resulting DET curve together with the EER achieved. Compare the results using PCA with the DCT features considered in Task 1.}
+
+\section*{Exercise 3}
+
+\textit{The goal of this task is to improve the matching module. Instead of using a simple distance comparison, you must consider Support Vector Machines (SVM). In this case, you should train one specific SVM model per user using the training data (train = 6 images). Features extracted using the PCA module developed in Task 2 must be considered in this Task.}
+
+%You can use the fitcsvm function available in Matlab. For the training phase, you should follow:
+%SVMModel = fitcsvm(…)
+%For the test phase, you should follow:
+%[label,score]= predict(SVMModel,MatrixTestFeats);
+%to obtain the scores for each user model.
+%For more information, check Matlab Help:
+%https://es.mathworks.com/help/stats/fitcsvm.html?lang=en
+
+\textbf{a)} \emph{Using the parameters train = 6 and test = 4, paste the DET curves and indicate the EERs in the following cases: 1) regarding the KernelFunction parameter of the SVM (using all PCA components), and 2) regarding the number of PCA components considered for the feature extraction module (using the KernelFunction polynomial and starting with 3 PCA components).}
+
+\end{document}
