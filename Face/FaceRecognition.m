@@ -5,8 +5,8 @@ clc
 %%%%%%%%%
 % First visualize some example images
 
-imagen=imread('./FaceDatabaseATT/s06/1.pgm');
-figure;imshow(imagen);
+imagen=imread('./FaceDatabaseATT/s08/1.pgm');
+%figure;imshow(imagen);
 
 
 %Divide the number of images per user for Train and Test:
@@ -18,7 +18,7 @@ addpath(cd)
 addpath('DetPlots')
 cd FaceDatabaseATT
 
-coeff=10; %Number of DCT coefficients to use
+coeff=1; %Number of DCT coefficients to use
 
 
 dirListA=dir;
@@ -134,6 +134,7 @@ cd ..
 
 save('ParametrizaATT','TargetScores','NonTargetScores');
 
+coeff
 [EER]=Eval_Det(TargetScores,NonTargetScores,'b') %Plot Det curve
 
 

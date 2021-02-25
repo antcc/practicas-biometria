@@ -56,17 +56,19 @@
 
 \textbf{a)} \emph{Paste one image of the ATT Face Dataset and the corresponding image after using the 2D Discrete Cosine Transform (DCT)}.
 
+The results are shown in Figure \ref{fig:ex1a}, where we use the default value of $10$ coefficients for the DCT. The image on the right is a representation of the image on the left using a few \textit{basis functions} (cosine waves).
+
 \begin{figure}[h!]
   \centering
-       \begin{subfigure}[t]{0.45\textwidth}
+       \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.8]{}
+         \includegraphics[scale=0.4]{img/1a_orig}
          \caption{Original image}
      \end{subfigure}%
      \quad
-     \begin{subfigure}[t]{0.45\textwidth}
+     \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.8]{}
+         \includegraphics[scale=0.4]{img/1a_dct}
          \caption{DCT representation}
      \end{subfigure}
     \caption{Sample face image before and after applying DCT.}
@@ -75,9 +77,76 @@
 
 \textbf{b)} \emph{Using the original configuration parameters (train = 6 images, test = 4 images, DCT coefficients = 10), plot the resulting DET image and indicate the resulting EER.}
 
+The resulting DET curve is shown in Figure \ref{fig:ex1b}. The EER achieved, marked with a circle on the image, is $5.6891\%$. Recall that this value represents the point where the false acceptance rate and false rejection rate are equal.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.6]{img/1b_det}
+    \caption{DET curve obtained with default parameters.}
+    \label{fig:ex1b}
+\end{figure}
+
 \textbf{c)} \emph{Find out the configuration of the DCT coefficients that achieves the best EER results (keeping train = 6 images, test = 4 images). Justify your result, including the resulting DET image and EER value.}
 
+Since we know that in general most images can be represented with just a few of the first DCT coefficients, we explore the best configuration in the search space in which the number of coefficientes varies from $1$ to $20$. The best EER result was $3.75\%$, obtained with \textit{coeff=5}, and the corresponding DET curve can be seen in Figure \ref{fig:ex1c}. We have achieved an EER that is about 2 percentage points smaller than the one obtained with the default parameters.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.6]{img/1c_det}
+    \caption{DET curve obtained with \textit{coeff=5}.}
+    \label{fig:ex1c}
+\end{figure}
+
+Next we show in Figure \ref{fig:ex1c_bis} a comparison of the DET curves for all values \textit{coeff}$=1,\dots,20$, and also the evolution of the EER values with respect to the \textit{coeff} parameter.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.4]{img/1c_det_all}
+         \caption{DET curves}
+     \end{subfigure}%
+     \quad \quad
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.6]{img/1c_eer_evol}
+         \caption{EER evolution}
+     \end{subfigure}
+    \caption{DET and EER for all values of \textit{coeff}.}
+    \label{fig:ex1c_bis}
+\end{figure}
+
+\newpage
 \textbf{d)} \textit{Once the best configuration of the DCT coefficients has been selected (in previous point), analyze the influence of the number of training images in the system performance. Include the EER result achieved for each case (from train = 1 to train = 7). Justify the results.}
+
+We fix the parameter \textit{coeff}$=5$. Varying the value of \textit{train} from $1$ to $7$ (and setting \textit{test} to $10-$\textit{train}), the best EER result achieved was $3.3333\%$, obtained with \textit{train=7}, and the corresponding DET curve can be seen in Figure \ref{fig:ex1d}. As we can see, we have succeeded in lowering the EER obtained in \textbf{1c)}.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.6]{img/1d_det}
+    \caption{DET curve obtained with \textit{train=7}.}
+    \label{fig:ex1d}
+\end{figure}
+
+The EER values obtained for each value of \textit{train} are summarized in Table \ref{tab:ex1d}, and a graph showing the evolution is shown in Figure \ref{fig:ex1d_bis}. The conclusion we draw is that a $70\%-30\%$ split in the dataset leads to better results regarding the EER.
+
+\begin{table}
+  \centering
+  \begin{tabular}{c|ccccccc}
+    \textbf{Train} & 1 & 2 & 3 & 4 & 5 & 6 & 7\\
+    \hline
+    \textbf{EER (\%)} & 13.0556 & 9.3750 & 6.4286 & 5.8333 & 5.0000 & 3.7500 & 3.3333
+  \end{tabular}
+  \caption{EER values obtained for each value of \textit{train}.}
+  \label{tab:ex1d}
+\end{table}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.6]{img/1d_eer_evol}
+    \caption{EER evolution for different values of the \textit{train} parameter.}
+    \label{fig:ex1d_bis}
+\end{figure}
 
 \section*{Exercise 2}
 
