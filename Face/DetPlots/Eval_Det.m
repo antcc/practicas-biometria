@@ -42,5 +42,3 @@ Plot_DET (P_miss(posmin),P_fa(posmin),'ko');
 %Plot_DET (P_miss(ThresEER),P_fa(ThresEER),'ko');
 %Plot_DET (Popt_miss,Popt_fa,'ko');
 hold on;
-
-

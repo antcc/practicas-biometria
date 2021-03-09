@@ -52,7 +52,7 @@
 
 \section*{Exercise 1}
 
-\textit{Based on the provided code, run the \texttt{FaceRecognition.m} file and complete the following points.}
+\textit{Based on the provided code, run the \texttt{FaceRecognition\_DCT.m} file and complete the following points.}
 
 \textbf{a)} \emph{Paste one image of the ATT Face Dataset and the corresponding image after using the 2D Discrete Cosine Transform (DCT)}.
 
@@ -103,13 +103,13 @@ Next we show in Figure \ref{fig:ex1c_bis} a comparison of the DET curves for all
   \centering
        \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.4]{img/1c_det_all}
+         \includegraphics[scale=0.35]{img/1c_det_all}
          \caption{DET curves}
      \end{subfigure}%
      \quad \quad
      \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.6]{img/1c_eer_evol}
+         \includegraphics[scale=0.525]{img/1c_eer_evol}
          \caption{EER evolution}
      \end{subfigure}
     \caption{DET and EER for all values of \textit{coeff}.}
@@ -123,14 +123,14 @@ We fix the parameter \textit{coeff}$=5$. Varying the value of \textit{train} fro
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.6]{img/1d_det}
+    \includegraphics[scale=0.5]{img/1d_det}
     \caption{DET curve obtained with \textit{train=7}.}
     \label{fig:ex1d}
 \end{figure}
 
 The EER values obtained for each value of \textit{train} are summarized in Table \ref{tab:ex1d}, and a graph showing the evolution is shown in Figure \ref{fig:ex1d_bis}. The conclusion we draw is that a $70\%-30\%$ split in the dataset leads to better results regarding the EER.
 
-\begin{table}
+\begin{table}[h!]
   \centering
   \begin{tabular}{c|ccccccc}
     \textbf{Train} & 1 & 2 & 3 & 4 & 5 & 6 & 7\\
@@ -143,7 +143,7 @@ The EER values obtained for each value of \textit{train} are summarized in Table
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.6]{img/1d_eer_evol}
+    \includegraphics[scale=0.5]{img/1d_eer_evol}
     \caption{EER evolution for different values of the \textit{train} parameter.}
     \label{fig:ex1d_bis}
 \end{figure}
@@ -152,19 +152,81 @@ The EER values obtained for each value of \textit{train} are summarized in Table
 
 \textit{The goal of this task is to change the feature extraction module. Instead of using DCT coefficients as in Task 1, you must consider \textbf{Principal Component Analysis (PCA)} to extract more robust features.}
 
-%You can use the pca.m function available in Matlab. For the training phase, you should follow:
-%[coeff_PCA,MatrixTrainPCAFeats,latent] = pca(MatrixTrainFeats);
-%meanTrainMatrix=mean(MatrixTrainFeats);
-%It is important to remark that the PCA function must be applied once for all training users and samples (not one PCA per user as this would provide specific coeff_PCA parameters per user).
-%For the test phase, you should follow:
-%For each test, subtract the meanTrainMatrix, and multiply by the coeff_PCA transformation matrix in order to obtain the test features in the PCA domain.
-%For more information, check Matlab Help: https://es.mathworks.com/help/stats/pca.html
+The code implemented for this exercise can be seen in \verb|FaceRecognition_PCA.m|. The main ideas can be summarized as follows:
+
+\begin{enumerate}
+  \item Instead of performing feature extraction using DCT features, we want to use PCA features. For this purpose, we begin with the raw image matrices, and flatten them to a row vector. Next, we construct a matrix with all the training images (for every user) by vertically stacking the row vectors of each image, and we do the same for the test matrix.
+  \begin{minted}{matlab}
+% Convert image to row vector
+im = reshape(im.',1,[]);
+% Fill train matrix (i=user, j=image number)
+MatrixTrainFeats((i-1)*Train + j,:) = im;
+MatrixTrainLabels((i-1)*Train + j,1)=i;
+  \end{minted}
+  \item We perform PCA on the newly constructed training matrix (using all images), and save the principal components, the projected training matrix, the variance explained by each principal component, and finally the mean vector of the columns of the original training matrix.
+  \begin{minted}{matlab}
+% Perform PCA with training values
+[coeff_PCA,MatrixTrainPCAFeats,~,~,explained,mu] = pca(MatrixTrainFeats);
+  \end{minted}
+\item The last step before evaluating our model is to project the test features using the principal components. For this task, we need to first center the test matrix using the mean vector \verb|mu|, and then project (multiply) on \verb|coeff_PCA|.
+\begin{minted}{matlab}
+% Center and project test matrix on principal components
+MatrixTestPCAFeats = (MatrixTestFeats - mu)*coeff_PCA;
+\end{minted}
+\end{enumerate}
 
 \textbf{a)} \emph{Using the parameters train = 6 and test = 4, paste the DET curve and indicate the EER when using all the PCA components.}
 
+The DET curve obtained is shown in Figure \ref{fig:ex2a}. We achieved an EER of $7.5926\%$, which is worse than the results obtained with 10 DCT coefficients (default value in the previous exercise).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.425]{img/2a_det}
+    \caption{DET curve obtained using all PCA components.}
+    \label{fig:ex2a}
+\end{figure}
+
 \textbf{b)} \emph{A key aspect for PCA is the number of components considered. Analyze and represent how the EER value changes in terms of the number of PCA components. Give your explanation about the results achieved.}
 
+We can make the assumption that the result obtained in \textbf{a)} is not that good because we are using \textit{too many components} to represent our images. One might think that by retaining exactly the right amount of information, we could achieve a better result. With this idea in mind, we repeat the process above varying the number of principal components from $1$ to the maximum number available, which in this case is $239$, and we study the evolution of the EER achieved when considering $1,2,\dots,239$ principal components.
+
+To project both the training and test matrices onto the first $L$ principal components, we use the following code:
+\begin{minted}{matlab}
+MatrixTestPCAFeatsReduced = MatrixTestPCAFeats(:, 1:L);
+MatrixTrainPCAFeatsReduced = MatrixTrainPCAFeats(:, 1:L);
+\end{minted}
+
+The graph mentioned above is shown in Figure \ref{fig:ex2b}, in which we see that after a certain number of components, the EER starts to increase, and then it tends to stabilize no matter how many components we consider. To try to explain this behaviour, we have also plotted the evolution of the $\%$ of variance explained by each of the principal components considered.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.45]{img/2b_eer}
+         \caption{EER}
+     \end{subfigure}%
+     \quad \quad
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.475]{img/2b_var}
+         \caption{Variance explained}
+     \end{subfigure}
+    \caption{Evolution of EER and explained variance with the number of principal components.}
+    \label{fig:ex2b}
+\end{figure}
+
+As we can see, at around 50 principal components the EER starts to increase, and it is precisely around that point where the $\%$ of explained variance that each new component contributes starts being negligible. We can conclude that we reach the optimal EER value by capturing the majority of explained variance, and stopping when the contributions drop below a reasonable threshold.
+
 \textbf{c)} \textit{Indicate the optimal number of PCA components and paste the resulting DET curve together with the EER achieved. Compare the results using PCA with the DCT features considered in Task 1.}
+
+The optimal number of PCA components found was $31$, reaching an EER value of $3.75\%$ with a total explained variance of $78.2609\%$. The corresponding DET curve can be seen in Figure \ref{fig:ex2c}. This is the same value as we obtained in \textbf{1c)} with the optimal number of DCT coefficients (using the same number of training images), so we can say that both methods perform equally well when doing feature extraction for the similarity measure (not necessarily for other matching methods). However, the features extracted from PCA tend to be more robust and interpretable (in terms of the explained variance), so we prefer this latter approach.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.55]{img/2c_det}
+    \caption{DET curve obtained using 31 PCA components (the optimal value).}
+    \label{fig:ex2c}
+\end{figure}
 
 \section*{Exercise 3}
 
