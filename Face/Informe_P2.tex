@@ -328,7 +328,9 @@ We found that decreasing the number of negative training examples had a negative
 
 \subsection*{A comment on EER calculation}
 
-%TODO contar micro/macro average EER + sklearn (link)
+During the realization of this assignment, we realized that the conventional EER definition is not applicable to a multi-class classification problem as there is no such concept as a \textit{false positive} or \textit{false negative}. In order to generalize the concept to a multi-class background one may take different approaches, apart from the one developed in this work. Reviewing the literature, another common approach is to compute the EER of each of the used One-vs-Rest or One-vs-One classifiers and compute the weighted average. This is done by \texttt{Sklearn} when asked to compute the ROC curve or the AUC score (area below the ROC curve) (\href{https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html}{reference}).
+
+We are not implementing this scoring method for this assignment due to limited time and lack of skill in Matlab. However, we do not discard using it in the final project and compare it to other methods of generalizing this metric.
 
 %TODO: revisar cálculo EER para usar la matriz de test entera de una vez (y cambiar código aquí arriba)
 
