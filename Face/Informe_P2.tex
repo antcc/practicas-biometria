@@ -62,13 +62,13 @@ The results are shown in Figure \ref{fig:ex1a}, where we use the default value o
   \centering
        \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.4]{img/1a_orig}
+         \includegraphics[scale=0.35]{img/1a_orig}
          \caption{Original image}
      \end{subfigure}%
      \quad
      \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.4]{img/1a_dct}
+         \includegraphics[scale=0.35]{img/1a_dct}
          \caption{DCT representation}
      \end{subfigure}
     \caption{Sample face image before and after applying DCT.}
@@ -81,7 +81,7 @@ The resulting DET curve is shown in Figure \ref{fig:ex1b}. The EER achieved, mar
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.6]{img/1b_det}
+    \includegraphics[scale=0.65]{img/1b_det}
     \caption{DET curve obtained with default parameters.}
     \label{fig:ex1b}
 \end{figure}
@@ -92,7 +92,7 @@ Since we know that in general most images can be represented with just a few of 
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.6]{img/1c_det}
+    \includegraphics[scale=0.65]{img/1c_det}
     \caption{DET curve obtained with \textit{coeff=5}.}
     \label{fig:ex1c}
 \end{figure}
@@ -135,7 +135,7 @@ The EER values obtained for each value of \textit{train} are summarized in Table
   \begin{tabular}{c|ccccccc}
     \textbf{Train} & 1 & 2 & 3 & 4 & 5 & 6 & 7\\
     \hline
-    \textbf{EER (\%)} & 13.0556 & 9.3750 & 6.4286 & 5.8333 & 5.0000 & 3.7500 & 3.3333
+    \textbf{EER (\%)} & 13.0556 & 9.3750 & 6.4286 & 5.8333 & 5.0000 & 3.7500 & {\color{red}3.3333}
   \end{tabular}
   \caption{EER values obtained for each value of \textit{train}.}
   \label{tab:ex1d}
@@ -158,10 +158,10 @@ The code implemented for this exercise can be seen in \verb|FaceRecognition_PCA.
   \item Instead of performing feature extraction using DCT features, we want to use PCA features. For this purpose, we begin with the raw image matrices, and flatten them to a row vector. Next, we construct a matrix with all the training images (for every user) by vertically stacking the row vectors of each image, and we do the same for the test matrix.
   \begin{minted}{matlab}
 % Convert image to row vector
-im = reshape(im.',1,[]);
+im = reshape(im.', 1, []);
 % Fill train matrix (i=user, j=image number)
-MatrixTrainFeats((i-1)*Train + j,:) = im;
-MatrixTrainLabels((i-1)*Train + j,1)=i;
+MatrixTrainFeats((i-1)*Train + j, :) = im;
+MatrixTrainLabels((i-1)*Train + j, 1) = i;
   \end{minted}
   \item We perform PCA on the newly constructed training matrix (using all images), and save the principal components, the projected training matrix, the variance explained by each principal component, and finally the mean vector of the columns of the original training matrix.
   \begin{minted}{matlab}
@@ -177,11 +177,11 @@ MatrixTestPCAFeats = (MatrixTestFeats - mu)*coeff_PCA;
 
 \textbf{a)} \emph{Using the parameters train = 6 and test = 4, paste the DET curve and indicate the EER when using all the PCA components.}
 
-The DET curve obtained is shown in Figure \ref{fig:ex2a}. We achieved an EER of $7.5926\%$, which is worse than the results obtained with 10 DCT coefficients (default value in the previous exercise).
+The DET curve obtained is shown in Figure \ref{fig:ex2a}. We achieved an EER of $8.125\%$, which is worse than the results obtained with 10 DCT coefficients (default value in the previous exercise).
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.425]{img/2a_det}
+    \includegraphics[scale=0.75]{img/2a_det}
     \caption{DET curve obtained using all PCA components.}
     \label{fig:ex2a}
 \end{figure}
@@ -190,7 +190,7 @@ The DET curve obtained is shown in Figure \ref{fig:ex2a}. We achieved an EER of 
 
 We can make the assumption that the result obtained in \textbf{a)} is not that good because we are using \textit{too many components} to represent our images. One might think that by retaining exactly the right amount of information, we could achieve a better result. With this idea in mind, we repeat the process above varying the number of principal components from $1$ to the maximum number available, which in this case is $239$, and we study the evolution of the EER achieved when considering $1,2,\dots,239$ principal components.
 
-To project both the training and test matrices onto the first $L$ principal components, we use the following code:
+To project both the training and test matrices onto the first $L$ principal components, we do the following:
 \begin{minted}{matlab}
 MatrixTestPCAFeatsReduced = MatrixTestPCAFeats(:, 1:L);
 MatrixTrainPCAFeatsReduced = MatrixTrainPCAFeats(:, 1:L);
@@ -202,13 +202,13 @@ The graph mentioned above is shown in Figure \ref{fig:ex2b}, in which we see tha
   \centering
        \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.45]{img/2b_eer}
+         \includegraphics[scale=0.5]{img/2b_eer}
          \caption{EER}
      \end{subfigure}%
-     \quad \quad
+     \quad\quad
      \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.475]{img/2b_var}
+         \includegraphics[scale=0.5]{img/2b_var}
          \caption{Variance explained}
      \end{subfigure}
     \caption{Evolution of EER and explained variance with the number of principal components.}
@@ -219,27 +219,119 @@ As we can see, at around 50 principal components the EER starts to increase, and
 
 \textbf{c)} \textit{Indicate the optimal number of PCA components and paste the resulting DET curve together with the EER achieved. Compare the results using PCA with the DCT features considered in Task 1.}
 
-The optimal number of PCA components found was $31$, reaching an EER value of $3.75\%$ with a total explained variance of $78.2609\%$. The corresponding DET curve can be seen in Figure \ref{fig:ex2c}. This is the same value as we obtained in \textbf{1c)} with the optimal number of DCT coefficients (using the same number of training images), so we can say that both methods perform equally well when doing feature extraction for the similarity measure (not necessarily for other matching methods). However, the features extracted from PCA tend to be more robust and interpretable (in terms of the explained variance), so we prefer this latter approach.
+The optimal number of PCA components found was $31$, reaching an EER value of $3.9103\%$ with a total explained variance of $78.2609\%$. The corresponding DET curve can be seen in Figure \ref{fig:ex2c}. This is almost the same value (only a bit worse) that we obtained in \textbf{1c)} with the optimal number of DCT coefficients (using the same number of training images), so we can say that both methods perform more or less equally well when doing feature extraction for the similarity measure, though not necessarily for other matching methods. However, the features extracted from PCA tend to be more robust and interpretable (in terms of the explained variance), so we prefer this latter approach.
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.55]{img/2c_det}
+    \includegraphics[scale=0.8]{img/2c_det}
     \caption{DET curve obtained using 31 PCA components (the optimal value).}
     \label{fig:ex2c}
 \end{figure}
 
 \section*{Exercise 3}
 
-\textit{The goal of this task is to improve the matching module. Instead of using a simple distance comparison, you must consider Support Vector Machines (SVM). In this case, you should train one specific SVM model per user using the training data (train = 6 images). Features extracted using the PCA module developed in Task 2 must be considered in this Task.}
+\textit{The goal of this task is to improve the matching module. Instead of using a simple distance comparison, you must consider Support Vector Machines (SVM). In this case, you should train one specific SVM model per user using the training data (train = 6 images). Features extracted using the PCA module developed in Task 2 must be considered in this Task, using the parameters train = 6 and test = 4.}
 
-%You can use the fitcsvm function available in Matlab. For the training phase, you should follow:
-%SVMModel = fitcsvm(…)
-%For the test phase, you should follow:
-%[label,score]= predict(SVMModel,MatrixTestFeats);
-%to obtain the scores for each user model.
-%For more information, check Matlab Help:
-%https://es.mathworks.com/help/stats/fitcsvm.html?lang=en
+The code implemented is available in the file \verb|FaceRecognition_SVM.m|. First of all, we consider the same PCA extraction module as in the previous exercise. Then, we train one SVM classifier per user with the \verb|fitcsvm| function, using their 6 training images as examples of the positive class, and all the training images of the rest of the users as negative examples:
 
-\textbf{a)} \emph{Using the parameters train = 6 and test = 4, paste the DET curves and indicate the EERs in the following cases: 1) regarding the KernelFunction parameter of the SVM (using all PCA components), and 2) regarding the number of PCA components considered for the feature extraction module (using the KernelFunction polynomial and starting with 3 PCA components).}
+\begin{minted}{matlab}
+for i=1:n_users  % Train one classifier for each user
+    labelsUser = MatrixTrainLabels == i;
+    svmModel = fitcsvm(MatrixTrainPCAFeats, labelsUser);
+    svms{i} = svmModel;
+end
+\end{minted}
+
+Next, we evaluate each test image on each of the 40 classifiers, and use the scores to calculate the EER, as in the following code snippet:
+
+\begin{minted}{matlab}
+for i=1:n_test  % For each Test image
+    for j=1:n_users  % For each user
+        % Predict using the SVM associated with user j
+        [label, score]=predict(svms{j}, MatrixTestPCAFeats(i, :));
+        % Fill Target or NonTarget depending on label coincidence
+        if MatrixTestLabels(i, 1) == j
+            TargetScores=[TargetScores, score(2)];
+        else
+            NonTargetScores=[NonTargetScores, score(2)];
+        end
+    end
+end
+\end{minted}
+
+
+\textbf{a)} \emph{Paste the DET curve and indicate the optimal EER found by varying the KernelFunction parameter of the SVM (using all PCA components).}
+
+To change the kernel of each SVM we have to provide it with the parameter \verb|KernelFunction|. The first kernel tried was the linear kernel (by default), which can be expressed as $k(x, x')=x^Tx'$. Then we tried the polynomial kernel of degree 2, $k(x, x')=(x^Tx')^2$, and finally the RBF or Gaussian kernel, which is $k(x, x')=\exp(-\gamma\lVert x - x'\rVert^2)$, where $\gamma$ is a scale parameter. In this last kernel we set the \verb|KernelScale| parameter to \verb|'auto'| so that the software chooses the best value heuristically. The EER values achieved with each of the configurations can be seen in Table \ref{tab:ex3a}, while the corresponding DET curves are shown in Figure \ref{fig:ex3a}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.45]{img/3a_linear_det}
+         \caption{Linear}
+     \end{subfigure}%
+     \quad\quad
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.45]{img/3a_poly2_det}
+         \caption{Polynomial degree 2}
+     \end{subfigure}
+
+     ~\vspace{1.5em}
+
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.45]{img/3a_rbf_det}
+         \caption{RBF + 'auto'}
+     \end{subfigure}
+    \caption{DET curves for each kernel choice using all PCA components.}
+    \label{fig:ex3a}
+\end{figure}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{c|ccc}
+    \textbf{Kernel} & Linear & Polynomial degree 2 & RBF + 'auto'\\
+    \hline
+    \textbf{EER (\%)} & 3.125 & 9.5032 & {\color{red}2.5}\\
+  \end{tabular}
+  \caption{EER values obtained for each kernel choice using all PCA components.}
+  \label{tab:ex3a}
+\end{table}
+
+As we can see, the best performing kernel is the RBF kernel, which is a well-known kernel that usually results in very good results. Next is the linear kernel, and even though it achieves a larger EER, this value is still lower than any EER obtained in the previous exercises. Finally, the polynomial kernel does not seem to perform well when using all 239 PCA components.
+
+\textbf{b)} \textit{Paste the DET curve and indicate the optimal EER found by varying the number of PCA components considered for the feature extraction module (using the KernelFunction polynomial and starting with 3 PCA components).}
+
+%TODO: ejecutar el archivo con min_ncomp=3, max_ncomp=239 y guardar la gráfica de evolución, mirando en la variable 'E' cuál es el óptimo. Volverlo a ejecutar con min_ncomp=max_ncomp={el óptimo} y poner el EER y la curva DET correspondiente (plot_DET=true en el código).
+
+\subsection*{A comment on the training examples}
+
+In order to reduce execution time, we made some attempts at decreasing the number of negative examples that each SVM is trained on. We implemented the following code to select only \verb|n_train_extra| images from the rest of the users at random, where \verb|0 < n_train_extra < 235|:
+\begin{minted}{matlab}
+% Genuine class clabels
+labels = [ones(Train, 1)
+          zeros(n_train_extra, 1)];
+% Get random training examples from other users
+pop = [1:(i-1)*Train i*Train+1:n_users*Train];
+random = randsample(pop, n_train_extra);
+% Compute training matrix for user i
+labelsUser = MatrixTrainLabels == i;
+matrix = [MatrixTrainPCAFeats(labelsUser, :) ;
+          MatrixTrainPCAFeats(random, :)];
+% Train SVM
+svmModel = fitcsvm(matrix, labels);
+\end{minted}
+
+We found that decreasing the number of negative training examples had a negative impact on the classification performance if we decreased the number too much, and for higher values the speedup was not substantial, so in the end we decided to stick with the whole training matrix. However, it is still possible that for a specific combination of some number of PCA components and a particular kernel, reducing the number of negative examples would increase the performance.
+
+\subsection*{A comment on EER calculation}
+
+%TODO contar micro/macro average EER + sklearn (link)
+
+%TODO: revisar cálculo EER para usar la matriz de test entera de una vez (y cambiar código aquí arriba)
+
+%TODO: repasar memoria, ejecutar todos los archivos una última vez.
 
 \end{document}

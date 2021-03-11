@@ -1,9 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% FaceRecognition_PCA.m
+%%% FaceRecognition_SVM.m
 %%%
 %%% Luis Antonio Ortega Andrés
 %%% Antonio Coín Castro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Global variables
+
+rng(2021);  % Seed random number generator
 
 %% Initialize and load images
 
@@ -31,8 +35,6 @@ MatrixTrainFeats=zeros(Train*40, width);
 MatrixTestFeats=zeros(Test*40, width);
 MatrixTrainLabels=zeros(Train*40,1); % Each row contains the ID of the user
 MatrixTestLabels=zeros(Test*40,1);
-n_train = numel(MatrixTrainLabels);
-n_test = numel(MatrixTestLabels);
 
 for i=1:n_users  % For each user
     % Move directory to current user
@@ -75,70 +77,77 @@ end
 
 %% Cross-validation of the whole process
 
-% Perform PCA on training matrix
-[coeff_PCA, MatrixTrainPCAFeatsAll, ~, ~, explained, mu] = ...
-    pca(MatrixTrainFeats);
-
 % Range of principal components (change at will between 1 and 239)
-min_ncomp = 31;
-max_ncomp = 31;
+min_ncomp = 3;
+max_ncomp = 239;
 E = zeros(max_ncomp - min_ncomp + 1, 1);  % Array to save EERs
-plot_DET = true;  % Whether to plot DET curve for each run
+plot_DET = false;  % Whether to plot DET curve for each run
 
 for NComp=min_ncomp:max_ncomp  % For each number of principal components
 
     %%% Extract features using PCA
 
-    MatrixTrainPCAFeats = MatrixTrainPCAFeatsAll(:, 1:NComp);
+    [coeff_PCA, MatrixTrainPCAFeats, ~, ~, ~, mu] = pca(MatrixTrainFeats);
+    MatrixTrainPCAFeats = MatrixTrainPCAFeats(:, 1:NComp);
     MatrixTestPCAFeats = (MatrixTestFeats - mu)*coeff_PCA(:, 1:NComp);
+    [n_test, n_features_pca] = size(MatrixTestPCAFeats);
 
-    %%% Similarity Computation Stage
+    %%% Train SVMs
 
-    % Each test image is going to be compared to each of the training images
-    % for each of the 40 users (N comparisons). Then, the final score is the
-    % result of the min of the N comparisons of each test image with the N
-    % training images of each user, which can be a genuine comparison (target)
-    % or an impostor comparison (NonTarget)
+    n_train_extra = 234;  % No. of negative train samples for each SVM (max 234)
+    svms = cell(1, n_users);  % Pre-allocate cell for SVMs
+    labels = [ones(Train, 1) ;  % Genuine class labels
+              zeros(n_train_extra, 1)];
 
-    TargetScores=[];
-    NonTargetScores=[];
+    % Specify kernel
+    kernel = 'polynomial';
+    scale = 'auto';
+    degree = 2;
 
-    for i=1:n_test  % For each Test image
-        for j=1:n_train % Comparison with each Training image
-            my_distance(j)= ...  % Compute the distance measure
-                mean(abs(MatrixTestPCAFeats(i,:) - MatrixTrainPCAFeats(j,:)));
+    for i=1:n_users  % Train one classifier for each user
+        % Get random training examples from other users
+        pop = [1:(i-1)*Train i*Train+1:n_users*Train];
+        random = randsample(pop, n_train_extra);
 
-            %if it's a genuine comparison
-            if(MatrixTestLabels(i,:) == MatrixTrainLabels(j,:))
-                LabelTest(j)=1;
-            else % otherwise
-                LabelTest(j)=0;
-            end
+        % Compute training matrix for user i
+        labelsUser = MatrixTrainLabels == i;
+        matrix = [MatrixTrainPCAFeats(labelsUser, :) ;
+                  MatrixTrainPCAFeats(random, :)];
+
+        % Train and save model
+        if strcmp(kernel, 'polynomial')
+            svmModel = fitcsvm(matrix, labels, ...
+                'KernelFunction', kernel, ...
+                'PolynomialOrder', degree);
+        elseif strcmp(kernel, 'rbf')
+            svmModel = fitcsvm(matrix, labels, ...
+                'KernelFunction', kernel, ...
+                'KernelScale', scale);
+        else
+             svmModel = fitcsvm(matrix, labels);
         end
 
-        % The final score is the min of the 6 comparisons of each Test image
-        % against the training images of each user
-        contF=1;
-        for k=1:Train:n_train
-            %Extract the scores of the N training signatures and select the min
-            my_distanceRed(contF)=min(my_distance(k:k+Train-1));
-
-            if LabelTest(k)==1 % target score
-                TargetScores=[TargetScores, my_distanceRed(contF)];
-            else % non target score
-                NonTargetScores=[NonTargetScores, my_distanceRed(contF)];
-            end
-
-            contF=contF+1;
-        end
-
+        svms{i} = svmModel;
     end
 
-    % Multiply by -1 to have higher values for genuine comparisons,
-    % as we have a distance computation. With other type of classifier
-    % this wouldn't be necessary.
-    TargetScores=-TargetScores;
-    NonTargetScores=-NonTargetScores;
+    %%% Compute EER
+
+    TargetScores = [];
+    NonTargetScores = [];
+
+    for i=1:n_test  % For each Test image
+        for j=1:n_users  % For each user
+            % Predict using the SVM associated with user j
+            [label, score]=predict(svms{j}, MatrixTestPCAFeats(i, :));
+
+            % Fill Target or NonTarget depending on label coincidence
+            if MatrixTestLabels(i, 1) == j
+                TargetScores=[TargetScores, score(2)];
+            else
+                NonTargetScores=[NonTargetScores, score(2)];
+            end
+        end
+    end
 
     % Return to root directory
     cd ..
@@ -149,19 +158,10 @@ for NComp=min_ncomp:max_ncomp  % For each number of principal components
         Eval_Det(TargetScores, NonTargetScores, 'b', plot_DET);
 end
 
-%% Plot explained variance and EER evolution
+%% Plot EER evolution
 
-% Plot explained variance
-figure;
-h=plot(1:numel(explained), explained,'-');
-set(h,'LineWidth',1.8);
-ylim([0 20]);
-title('Variance explained by principal components');
-xlabel('Principal components');
-ylabel('Fraction of variation explained [%]');
-
-% Plot EER evolution
 ncomp_range = min_ncomp:max_ncomp;
+
 if numel(ncomp_range) > 1
     figure;
     h = plot(ncomp_range, E, '-');
@@ -171,8 +171,3 @@ if numel(ncomp_range) > 1
     xlabel('Principal components');
     ylabel('EER [%]');
 end
-
-%% Sum of explained variance in the optimal value
-
-optimal = 31;
-sum_var_optimal = sum(explained(1:optimal, 1));
