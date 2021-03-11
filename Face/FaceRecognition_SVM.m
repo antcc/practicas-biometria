@@ -134,19 +134,15 @@ for NComp=min_ncomp:max_ncomp  % For each number of principal components
 
     TargetScores = [];
     NonTargetScores = [];
+    
+    for j=1:n_users  % For each user
+        % Predict using the SVM associated with user j
+        [labels, scores]=predict(svms{j}, MatrixTestPCAFeats);
 
-    for i=1:n_test  % For each Test image
-        for j=1:n_users  % For each user
-            % Predict using the SVM associated with user j
-            [label, score]=predict(svms{j}, MatrixTestPCAFeats(i, :));
-
-            % Fill Target or NonTarget depending on label coincidence
-            if MatrixTestLabels(i, 1) == j
-                TargetScores=[TargetScores, score(2)];
-            else
-                NonTargetScores=[NonTargetScores, score(2)];
-            end
-        end
+        % Fill Target or NonTarget depending on label coincidence
+        mask = MatrixTestLabels(:,1) == j;
+        TargetScores = [TargetScores score(mask,2)];
+        NonTargetScores = [NonTargetScores score(~mask, 2)];
     end
 
     % Return to root directory
