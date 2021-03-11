@@ -18,7 +18,7 @@ addpath(cd)
 addpath('DetPlots')
 cd FaceDatabaseATT
 
-coeff=1; %Number of DCT coefficients to use
+coeff=5; %Number of DCT coefficients to use
 
 
 dirListA=dir;
@@ -34,47 +34,47 @@ MatrixTestLabels=zeros(Test*40,1);
 contT=1;
 
 for i=1:numel(dirList) %Loop for each user
-   
+
     cd(dirList(i).name);
-    
+
     images=dir('*.pgm');
-    
-    
+
+
     %%% Feature extraction for Training Dataset
-    
+
     for j=1:Train %Train images
        im=imread(images(j).name);
        im=double(im);
         %figure;imshow(im);
-        
+
         %%Feat Extraction
-        
+
         % extract the features from each image
         feats=feature_extraction(im,coeff);
         MatrixTrainFeats(contR,:)=feats;
         MatrixTrainLabels(contR,1)=i; %user i
         contR=contR+1;
-        
+
     end
-    
+
       %%% Feature extraction for Test Dataset
-    
+
     for j=(Train+1):10
        im=imread(images(j).name);
        im=double(im);
         %figure;imshow(im);
-        
+
         %%Feat Extraction
-        
+
         % extract the features from each image
         feats=feature_extraction(im,coeff);
         MatrixTestFeats(contT,:)=feats;
         MatrixTestLabels(contT,1)=i;
         contT=contT+1;
     end
-    
+
     cd ..
-    
+
 end
 
 
@@ -92,37 +92,37 @@ NonTargetScores=[];
 for i=1:numel(MatrixTestLabels) %For each Test image
     contTest=1;
     for j=1:numel(MatrixTrainLabels) %Comparison with each Training image
-            
+
         my_distance(contTest)=mean(abs(MatrixTestFeats(i,:)-MatrixTrainFeats(j,:))); %Compute the distance measure
-        
+
         if(MatrixTestLabels(i,:)==MatrixTrainLabels(j,:)) %if it's a genuine comparison
             LabelTest(contTest)=1;
-            
+
         else % otherwise
             LabelTest(contTest)=0;
         end
         contTest=contTest+1;
-        
+
     end
-    
+
     %The final score is the min of the 6 comparisons of each Test image against the training images of each user
     contF=1;
     for k=1:Train:numel(my_distance)
         my_distanceRed(contF)=min(my_distance(k:k+Train-1)); %Extract the scores of the N training signatures and select the min
-        
-        if LabelTest(k)==1 %target score            
+
+        if LabelTest(k)==1 %target score
             TargetScores=[TargetScores, my_distanceRed(contF)];
-        else %non target score 
+        else %non target score
             NonTargetScores=[NonTargetScores, my_distanceRed(contF)];
         end
-        
-        
+
+
         contF=contF+1;
     end
-    
-    
-    
-    
+
+
+
+
 end
 
 %Multiply by -1 to have higher values for genuine comparisons, as we have a distance computation. With other type of classifier this wouldn't be necessary.
@@ -134,8 +134,4 @@ cd ..
 
 save('ParametrizaATT','TargetScores','NonTargetScores');
 
-coeff
-[EER]=Eval_Det(TargetScores,NonTargetScores,'b') %Plot Det curve
-
-
-
+[EER]=Eval_Det(TargetScores,NonTargetScores,'b', true)

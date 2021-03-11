@@ -78,10 +78,10 @@ end
 %% Cross-validation of the whole process
 
 % Range of principal components (change at will between 1 and 239)
-min_ncomp = 3;
-max_ncomp = 239;
+min_ncomp = 12;
+max_ncomp = 12;
 E = zeros(max_ncomp - min_ncomp + 1, 1);  % Array to save EERs
-plot_DET = false;  % Whether to plot DET curve for each run
+plot_DET = true;  % Whether to plot DET curve for each run
 
 for NComp=min_ncomp:max_ncomp  % For each number of principal components
 
@@ -99,8 +99,8 @@ for NComp=min_ncomp:max_ncomp  % For each number of principal components
     labels = [ones(Train, 1) ;  % Genuine class labels
               zeros(n_train_extra, 1)];
 
-    % Specify kernel
-    kernel = 'polynomial';
+    % Specify kernel ('linear', 'polynomial' or 'rbf')
+    kernel = 'rbf';
     scale = 'auto';
     degree = 2;
 
@@ -117,6 +117,7 @@ for NComp=min_ncomp:max_ncomp  % For each number of principal components
         % Train and save model
         if strcmp(kernel, 'polynomial')
             svmModel = fitcsvm(matrix, labels, ...
+                'Standardize', true, ...
                 'KernelFunction', kernel, ...
                 'PolynomialOrder', degree);
         elseif strcmp(kernel, 'rbf')
@@ -134,15 +135,15 @@ for NComp=min_ncomp:max_ncomp  % For each number of principal components
 
     TargetScores = [];
     NonTargetScores = [];
-    
-    for j=1:n_users  % For each user
-        % Predict using the SVM associated with user j
-        [labels, scores]=predict(svms{j}, MatrixTestPCAFeats);
+
+    for i=1:n_users  % For each user
+        % Predict using the SVM associated with user i
+        [labelsSVM, scores]=predict(svms{i}, MatrixTestPCAFeats);
 
         % Fill Target or NonTarget depending on label coincidence
-        mask = MatrixTestLabels(:,1) == j;
-        TargetScores = [TargetScores score(mask,2)];
-        NonTargetScores = [NonTargetScores score(~mask, 2)];
+        maskUser = MatrixTestLabels(:, 1) == i;
+        TargetScores=[TargetScores, scores(maskUser, 2)'];
+        NonTargetScores=[NonTargetScores, scores(~maskUser, 2)'];
     end
 
     % Return to root directory

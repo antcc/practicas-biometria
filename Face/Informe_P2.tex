@@ -13,7 +13,7 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=magenta}
 \setlength{\parindent}{0in}
-\usepackage[margin=0.8in]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage[english]{babel}
 \usepackage{mathtools}
 \usepackage{palatino}
@@ -123,7 +123,7 @@ We fix the parameter \textit{coeff}$=5$. Varying the value of \textit{train} fro
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.5]{img/1d_det}
+    \includegraphics[scale=0.6]{img/1d_det}
     \caption{DET curve obtained with \textit{train=7}.}
     \label{fig:ex1d}
 \end{figure}
@@ -143,7 +143,7 @@ The EER values obtained for each value of \textit{train} are summarized in Table
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.5]{img/1d_eer_evol}
+    \includegraphics[scale=0.55]{img/1d_eer_evol}
     \caption{EER evolution for different values of the \textit{train} parameter.}
     \label{fig:ex1d_bis}
 \end{figure}
@@ -159,6 +159,7 @@ The code implemented for this exercise can be seen in \verb|FaceRecognition_PCA.
   \begin{minted}{matlab}
 % Convert image to row vector
 im = reshape(im.', 1, []);
+
 % Fill train matrix (i=user, j=image number)
 MatrixTrainFeats((i-1)*Train + j, :) = im;
 MatrixTrainLabels((i-1)*Train + j, 1) = i;
@@ -166,7 +167,8 @@ MatrixTrainLabels((i-1)*Train + j, 1) = i;
   \item We perform PCA on the newly constructed training matrix (using all images), and save the principal components, the projected training matrix, the variance explained by each principal component, and finally the mean vector of the columns of the original training matrix.
   \begin{minted}{matlab}
 % Perform PCA with training values
-[coeff_PCA,MatrixTrainPCAFeats,~,~,explained,mu] = pca(MatrixTrainFeats);
+[coeff_PCA,MatrixTrainPCAFeats,~,~,explained,mu] = ...
+    pca(MatrixTrainFeats);
   \end{minted}
 \item The last step before evaluating our model is to project the test features using the principal components. For this task, we need to first center the test matrix using the mean vector \verb|mu|, and then project (multiply) on \verb|coeff_PCA|.
 \begin{minted}{matlab}
@@ -181,7 +183,7 @@ The DET curve obtained is shown in Figure \ref{fig:ex2a}. We achieved an EER of 
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.75]{img/2a_det}
+    \includegraphics[scale=0.85]{img/2a_det}
     \caption{DET curve obtained using all PCA components.}
     \label{fig:ex2a}
 \end{figure}
@@ -223,14 +225,14 @@ The optimal number of PCA components found was $31$, reaching an EER value of $3
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[scale=0.8]{img/2c_det}
+    \includegraphics[scale=0.75]{img/2c_det}
     \caption{DET curve obtained using 31 PCA components (the optimal value).}
     \label{fig:ex2c}
 \end{figure}
 
 \section*{Exercise 3}
 
-\textit{The goal of this task is to improve the matching module. Instead of using a simple distance comparison, you must consider Support Vector Machines (SVM). In this case, you should train one specific SVM model per user using the training data (train = 6 images). Features extracted using the PCA module developed in Task 2 must be considered in this Task, using the parameters train = 6 and test = 4.}
+\textit{The goal of this task is to improve the matching module. Instead of using a simple distance comparison, you must consider Support Vector Machines (SVM). In this case, you should train one specific SVM model per user using the training data. Moreover, features extracted using the PCA module developed in Task 2 must be considered in this Task, using the parameters train = 6 and test = 4.}
 
 The code implemented is available in the file \verb|FaceRecognition_SVM.m|. First of all, we consider the same PCA extraction module as in the previous exercise. Then, we train one SVM classifier per user with the \verb|fitcsvm| function, using their 6 training images as examples of the positive class, and all the training images of the rest of the users as negative examples:
 
@@ -245,17 +247,14 @@ end
 Next, we evaluate each test image on each of the 40 classifiers, and use the scores to calculate the EER, as in the following code snippet:
 
 \begin{minted}{matlab}
-for i=1:n_test  % For each Test image
-    for j=1:n_users  % For each user
-        % Predict using the SVM associated with user j
-        [label, score]=predict(svms{j}, MatrixTestPCAFeats(i, :));
-        % Fill Target or NonTarget depending on label coincidence
-        if MatrixTestLabels(i, 1) == j
-            TargetScores=[TargetScores, score(2)];
-        else
-            NonTargetScores=[NonTargetScores, score(2)];
-        end
-    end
+for i=1:n_users  % For each user
+    % Predict using the SVM associated with user i
+    [labelsSVM, scores]=predict(svms{i}, MatrixTestPCAFeats);
+
+    % Fill Target or NonTarget depending on label coincidence
+    maskUser = MatrixTestLabels(:, 1) == i;
+    TargetScores=[TargetScores, scores(maskUser, 2)'];
+    NonTargetScores=[NonTargetScores, scores(~maskUser, 2)'];
 end
 \end{minted}
 
@@ -268,13 +267,13 @@ To change the kernel of each SVM we have to provide it with the parameter \verb|
   \centering
        \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.45]{img/3a_linear_det}
+         \includegraphics[scale=0.55]{img/3a_linear_det}
          \caption{Linear}
      \end{subfigure}%
      \quad\quad
      \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.45]{img/3a_poly2_det}
+         \includegraphics[scale=0.73]{img/3a_poly2_det}
          \caption{Polynomial degree 2}
      \end{subfigure}
 
@@ -282,7 +281,7 @@ To change the kernel of each SVM we have to provide it with the parameter \verb|
 
      \begin{subfigure}[t]{0.4\textwidth}
          \centering
-         \includegraphics[scale=0.45]{img/3a_rbf_det}
+         \includegraphics[scale=0.55]{img/3a_rbf_det}
          \caption{RBF + 'auto'}
      \end{subfigure}
     \caption{DET curves for each kernel choice using all PCA components.}
@@ -294,7 +293,7 @@ To change the kernel of each SVM we have to provide it with the parameter \verb|
   \begin{tabular}{c|ccc}
     \textbf{Kernel} & Linear & Polynomial degree 2 & RBF + 'auto'\\
     \hline
-    \textbf{EER (\%)} & 3.125 & 9.5032 & {\color{red}2.5}\\
+    \textbf{EER (\%)} & 3.125 & 7.50 & {\color{red}2.5}\\
   \end{tabular}
   \caption{EER values obtained for each kernel choice using all PCA components.}
   \label{tab:ex3a}
@@ -302,24 +301,67 @@ To change the kernel of each SVM we have to provide it with the parameter \verb|
 
 As we can see, the best performing kernel is the RBF kernel, which is a well-known kernel that usually provides very good results. Next is the linear kernel, and even though it achieves a larger EER, this value is still lower than any EER obtained in the previous exercises. Finally, the polynomial kernel does not seem to perform well when using all 239 PCA components.
 
+Note that exclusively for the polynomial kernel, we needed to standardize the data (centering and scaling) by setting the \verb|Standardize| parameter to \verb|true|, to reduce both computational time and the EER achieved. However, we did not standardize the data with the other kernels because the performance was poorer.
+
 \textbf{b)} \textit{Paste the DET curve and indicate the optimal EER found by varying the number of PCA components considered for the feature extraction module (using the KernelFunction polynomial and starting with 3 PCA components).}
 
-%TODO: ejecutar el archivo con min_ncomp=3, max_ncomp=239 y guardar la gráfica de evolución, mirando en la variable 'E' cuál es el óptimo. Volverlo a ejecutar con min_ncomp=max_ncomp={el óptimo} y poner el EER y la curva DET correspondiente (plot_DET=true en el código).
+First of all, we fix the polynomial kernel of degree 2 (with standardized data), and let the number of PCA components used vary in $3,4,\dots, 239$. The optimal number of principal components found was 34, which resulted in an EER of $1.9391\%$. This is not a surprise, because 34 is quite close to the optimum number of PCA components found in the previous exercise for the similarity measure, and we saw that the explained variance started to decrease substantially not far from there. The curve that tracks EER evolution with respect to the number of components and the DET curve for the optimal value can be seen on Figure \ref{fig:ex3b_poly}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.55]{img/3b_poly_eer}
+         \caption{EER evolution}
+     \end{subfigure}%
+     \quad\quad
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.55]{img/3b_poly_det}
+         \caption{DET curve for 34 components}
+     \end{subfigure}
+    \caption{EER evolution and optimal DET curve for the polynomial kernel.}
+    \label{fig:ex3b_poly}
+\end{figure}
+
+As an added bonus\footnote{For this section we exploited Matlab's parallel capabilities, using \texttt{parloop} on the main cross-validation loop to distribute the code among several threads and speed up the computations.}, we repeated the process with the RBF kernel, to see which was the optimal number of PCA components in this case. We achieved an optimal EER of $1.8750\%$, the lowest we have seen, with just the first 12 principal components, which may seem a bit surprising. The evolution of the EER and the corresponding DET curve are shown in Figure \ref{fig:ex3b_rbf}.
+
+\begin{figure}[h!]
+  \centering
+       \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.55]{img/3b_rbf_eer}
+         \caption{EER evolution}
+     \end{subfigure}%
+     \quad\quad
+     \begin{subfigure}[t]{0.4\textwidth}
+         \centering
+         \includegraphics[scale=0.55]{img/3b_rbf_det}
+         \caption{DET curve for 12 components}
+     \end{subfigure}
+    \caption{EER evolution and optimal DET curve for the RBF kernel.}
+    \label{fig:ex3b_rbf}
+\end{figure}
+
+In conclusion, we have found that by carefully choosing a suitable number of PCA components and setting an appropriately tuned kernel function, we can decrease the EER to the lowest value seen so far, which is just below $2\%$. Since this value is quite low, we can confidently say that we expect the final classifier to have a very good performance.
 
 \subsection*{A comment on the training examples}
 
 In order to reduce execution time, we made some attempts at decreasing the number of negative examples that each SVM is trained on. We implemented the following code to select only \verb|n_train_extra| images from the rest of the users at random, where \verb|0 < n_train_extra < 235|:
 \begin{minted}{matlab}
 % Genuine class clabels
-labels = [ones(Train, 1)
+labels = [ones(Train, 1) ;
           zeros(n_train_extra, 1)];
+
 % Get random training examples from other users
 pop = [1:(i-1)*Train i*Train+1:n_users*Train];
 random = randsample(pop, n_train_extra);
+
 % Compute training matrix for user i
 labelsUser = MatrixTrainLabels == i;
 matrix = [MatrixTrainPCAFeats(labelsUser, :) ;
           MatrixTrainPCAFeats(random, :)];
+
 % Train SVM
 svmModel = fitcsvm(matrix, labels);
 \end{minted}
@@ -328,11 +370,9 @@ We found that decreasing the number of negative training examples had a negative
 
 \subsection*{A comment on EER calculation}
 
-During the realization of this assignment, we realized that the conventional EER definition is not applicable to a multi-class classification problem as there is no such concept as a \textit{false positive} or \textit{false negative}. In order to generalize the concept to a multi-class background one may take different approaches, apart from the one developed in this work. Reviewing the literature, another common approach is to compute the EER of each of the used One-vs-Rest or One-vs-One classifiers and compute the weighted average. This is done by \texttt{Sklearn} when asked to compute the ROC curve or the AUC score (area below the ROC curve) (\href{https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html}{reference}).
+While carrying out this assignment, we realized that the conventional EER definition for binary classifiers is not directly applicable here, as there is no such concept as a \textit{false positive} or a \textit{false negative} in a multi-class setting. Reviewing the literature in this regard, we found that in order to generalize the concept one may take different approaches, apart from the one pursued in this work. In particular, another common technique is to compute the EER of each of the One-vs-Rest classifiers and then compute some kind of weighted average. For example, \href{https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html}{this is what sklearn does} when asked to compute the ROC curve or the AUC score (area below the ROC curve).
 
-We are not implementing this scoring method for this assignment due to limited time and lack of skill in Matlab. However, we do not discard using it in the final project and compare it to other methods of generalizing this metric.
-
-%TODO: revisar cálculo EER para usar la matriz de test entera de una vez (y cambiar código aquí arriba)
+We thought about implementing this alternative metric calculation to compare it with the one we already use, but eventually we decided against it due to limited time and our lack of skill with Matlab. However, we do not rule out expanding on this line of work in the final project to compare different methods of EER calculation.
 
 %TODO: repasar memoria, ejecutar todos los archivos una última vez.
 
