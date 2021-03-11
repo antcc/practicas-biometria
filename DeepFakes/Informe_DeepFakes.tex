@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=magenta, citecolor=cyan}
+\setlength{\parindent}{0in}
+\usepackage[margin=1in]{geometry}
+\usepackage[english]{babel}
+\usepackage{mathtools}
+\usepackage{palatino}
+\usepackage{fancyhdr}
+\usepackage{sectsty}
+\usepackage{engord}
+\usepackage{parskip}
+\usepackage{minted}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage[center]{caption}
+\usepackage{placeins}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{todonotes}
+\usepackage{pdfpages}
+% \titlespacing*{\subsection}{0pt}{5.5ex}{3.3ex}
+%\titlespacing*{\section}{0pt}{5.5ex}{1ex}
+
+
+\usepackage[
+  style=apa
+]{biblatex}
+
+\addbibresource{bibliography.bib}
+
+\author{Luis Antonio Ortega Andrés\\Antonio Coín Castro}
+\date{\today}
+\title{DeepFakes Detection Lab - Report}
+\hypersetup{
+ pdfauthor={Luis Antonio Ortega Andrés, Antonio Coín Castro},
+ pdftitle={},
+ pdfkeywords={},
+ pdfsubject={},
+ pdflang={Spanish}}}
+
+\begin{document}
+
+\maketitle
+
+\section*{General comments}
+
+We will use Keras ~\parencite{chollet2015keras}.
+
+\section*{Task 1: intra-database analysis}
+
+\textit{The goal of this task is to develop and evaluate DeepFake detection systems over the same database. In this task, you should use only the UADFV database, which is divided into \texttt{development} and \texttt{evaluation} datasets.}
+
+\textbf{a)} \textit{Provide all details (including links or references if needed) of your proposed DeepFake detection system.}
+
+\textbf{b)} \textit{Provide all details of the development/training procedure followed and the results achieved using the development dataset of the UADFV database. Show the results achieved in terms of Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC).}
+
+\textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
+
+\section*{Task 2: inter-database analysis}
+
+\textit{The goal of this task is to evaluate the DeepFake detection system developed in Task 1 with a new database (not seen during the development/training of the detector). In this task, you should use only the Celeb-DF. You only need to evaluate your fake detector developed in Task 1 over the \texttt{evaluation} dataset of Celeb-DF, not train again with them.}
+
+\textbf{a)} \textit{Describe the results achieved by your DeepFake detection system developed in Task 1 using the evaluation dataset of the Celeb-DF database. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 1.}
+
+\section*{Task 3: inter-database proposal}
+
+\textit{The goal of this task is to improve the DeepFake detection system originally developed in Task 1 in order to achieve better inter-database results. You must consider the same evaluation dataset as in Task 2 (i.e. the \texttt{evaluation} dataset of the Celeb-DF database).}
+
+\textbf{a)} \textit{Describe the improvements carried out in your proposed DeepFake detection system in comparison with Task 1.}
+
+\textbf{b)} \textit{Describe the results achieved by your enhanced DeepFake detection system over the final evaluation dataset. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 2.}
+
+\textbf{c)} \textit{Indicate the conclusions and possible future improvements}.
+
+%%%%%%%%%%%%%%%%
+%% Bibliography
+%%%%%%%%%%%%%%%%
+
+\printbibliography
+
+\end{document}
