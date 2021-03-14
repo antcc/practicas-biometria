@@ -88,7 +88,7 @@ The resulting DET curve is shown in Figure \ref{fig:ex1b}. The EER achieved, mar
 
 \textbf{c)} \emph{Find out the configuration of the DCT coefficients that achieves the best EER results (keeping train = 6 images, test = 4 images). Justify your result, including the resulting DET image and EER value.}
 
-Since we know that in general most images can be represented with just a few of the first DCT coefficients, we explore the best configuration in the search space in which the number of coefficientes varies from $1$ to $20$. The best EER result was $3.75\%$, obtained with \textit{coeff=5}, and the corresponding DET curve can be seen in Figure \ref{fig:ex1c}. We have achieved an EER that is about 2 percentage points smaller than the one obtained with the default parameters.
+Since we know that in general most images can be represented with just a few of the first DCT coefficients, we explore the best configuration in the search space in which the number of coefficients varies from $1$ to $20$. The best EER result was $3.75\%$, obtained with \textit{coeff=5}, and the corresponding DET curve can be seen in Figure \ref{fig:ex1c}. We have achieved an EER that is about 2 percentage points smaller than the one obtained with the default parameters.
 
 \begin{figure}[h!]
   \centering
@@ -347,7 +347,7 @@ In conclusion, we have found that by carefully choosing a suitable number of PCA
 
 \subsection*{A comment on the training examples}
 
-In order to reduce execution time, we made some attempts at decreasing the number of negative examples that each SVM is trained on. We implemented the following code to select only \verb|n_train_extra| images from the rest of the users at random, where \verb|0 < n_train_extra < 235|:
+In order to reduce execution time, we made some attempts at decreasing the number of negative examples that each SVM is trained on. We implemented the following code to select only \verb|n_train_extra| images from the rest of the users at random, where \verb|0<n_train_extra<235|:
 \begin{minted}{matlab}
 % Genuine class clabels
 labels = [ones(Train, 1) ;
@@ -370,10 +370,8 @@ We found that decreasing the number of negative training examples had a negative
 
 \subsection*{A comment on EER calculation}
 
-While carrying out this assignment, we realized that the conventional EER definition for binary classifiers is not directly applicable here, as there is no such concept as a \textit{false positive} or a \textit{false negative} in a multi-class setting. Reviewing the literature in this regard, we found that in order to generalize the concept one may take different approaches, apart from the one pursued in this work. In particular, another common technique is to compute the EER of each of the One-vs-Rest classifiers and then compute some kind of weighted average. For example, \href{https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html}{this is what sklearn does} when asked to compute the ROC curve or the AUC score (area below the ROC curve).
+While carrying out this assignment, we realized that the conventional EER definition for binary classifiers is not directly applicable here, as there are no such concepts as \textit{false positives} or \textit{false negatives} in a multi-class setting. Reviewing the literature in this regard, we found that in order to generalize the concept one may take different approaches, apart from the one pursued in this work. In particular, another common technique is to compute the EER of each of the One-vs-Rest classifiers and then compute some kind of weighted average. For example, \href{https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html}{this is what sklearn does} when asked to compute the ROC curve or the AUC score (area below the ROC curve).
 
-We thought about implementing this alternative metric calculation to compare it with the one we already use, but eventually we decided against it due to limited time and our lack of skill with Matlab. However, we do not rule out expanding on this line of work in the final project to compare different methods of EER calculation.
-
-%TODO: repasar memoria, ejecutar todos los archivos una última vez.
+We thought about implementing this alternative metric calculation to compare it with the one we already use, but eventually we decided against it due to limited time and our lack of skill with Matlab. However, we do not rule out the possibility of expanding on this line of work in the final project to compare different methods of EER calculation.
 
 \end{document}
