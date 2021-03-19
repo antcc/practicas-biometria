@@ -1,7 +1,10 @@
 DeepFakes_Lab_2020.pdf
+models/
 Celeb-DF/
 UADFV/
 *.bbl
 *.bcf
 *.blg
 *.xml
+py38-appib/
+*.npz
