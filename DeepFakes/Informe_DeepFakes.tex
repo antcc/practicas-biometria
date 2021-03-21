@@ -61,7 +61,7 @@
 
 \textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
 
-First of all, we are reviewing the followed training procedure along with the acquired results test evaluations. Secondly, all the approaches that have being considered will be summarized with reasons for their throwaway.
+First of all, we are reviewing the followed training procedure along with the acquired results at test evaluations. Secondly, all the approaches that have being considered will be summarized with their reasons for being discarded.
 
 \subsection*{Preprocessing}
 
@@ -89,41 +89,72 @@ For example, the number of considered hidden layers for the NLP are \( \{(50), (
 
 Each of these models is trained to minimize the AUC metric, and not to maximize the classification accuracy.
 
-\subsection*{Test results}
+\subsection*{Evaluation results}
 
 From each family, the best model in training is chosen and evaluated over the \textbf{evaluation set}, the results are the following:
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{llll}
+    \textbf{Model}      & \textbf{PCA} & \textbf{Parameters} & \textbf{AUC scoring} \\ \hline
+    SVM RBF             & Yes &      \( C = 51.79, \gamma = 0.002\)  &     \( 0.9707 \)       \\
+    SVM Linear          & Yes &   \(  C = 0.04923 \)   &   \( 0.9432 \)   \\
+    MLP                 & No  &  Nº hidden layers \( (100,) \)     &    \(  0.9826 \)          \\
+    Logistic regression & Yes & \( C = 0.788 \) &    \( 0.9826 \)        
+    \end{tabular}
+  \end{table}
+
+Given this results, the considered model for the test evaluation is the multilayer perceptron. However, we are showing the results obtained by the four models in order to highlight is this decision is the correct one.
+
+\subsection*{Test results}
+
+The results for each model in the test partition are the following
+
 \begin{itemize}
-  \item \textbf{SVM RBF: } 
-    \begin{itemize}
-      \item \emph{PCA}: True,
-      \item \emph{Parameters: } \( C =  51.7947\) and \( \gamma = 0.0026\).
-      \item \emph{Test results: } Accuracy = \( 0.7714 \) and AUC = \( 0.8345 \) 
-    \end{itemize}
-  \item \textbf{SVM Lineal: }
-    \begin{itemize}
-      \item \emph{PCA}: True,
-      \item \emph{Parameters: } \( C =  0.01701\).
-      \item \emph{Test results: } Accuracy = \( 0.8381 \) and AUC = \( 0.9164 \) 
-    \end{itemize}
-  \item \textbf{MLP: }
-    \begin{itemize}
-      \item \emph{PCA}: False,
-      \item \emph{Parameters: } activation \( = ReLU \), hidden layers \( = (50) \).
-      \item \emph{Test results: } Accuracy = \( 0.8810 \) and AUC = \( 0.9383 \) 
-    \end{itemize}
-  \item \textbf{LR: }
-    \begin{itemize}
-      \item \emph{PCA}: True,
-      \item \emph{Parameters: } \( C =  0.78804\).
-      \item \emph{Test results: } Accuracy = \( 0.8381 \) and AUC = \( 0.9005 \) 
-    \end{itemize}
+  \item \textbf{SVM RBF: } Accuracy = \( 0.7619 \) and AUC = \( 0.8315 \) 
+  \item \textbf{SVM Lineal: } Accuracy = \( 0.8286 \) and AUC = \( 0.8883 \) 
+  \item \textbf{MLP: }Accuracy = \( 0.8762 \) and AUC = \( 0.9507 \) 
+  \item \textbf{LR: }Accuracy = \( 0.8238 \) and AUC = \( 0.8880 \) 
 \end{itemize}
+
+Where we can see that the multilayer perceptron (our selected model) achieves a 0.9363 AUC, slightly ahead of the rest. We can see the ROC curve achieved by each one of the models in Figure~\ref{fig:test_results}.
+
+
+    \begin{figure*}
+        \centering
+        \begin{subfigure}[b]{0.475\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{imgs/auc_svm.jpg}
+            \caption[]{{\small SVM with kernel RBF}}    
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.475\textwidth}  
+            \centering 
+            \includegraphics[width=\textwidth]{imgs/auc_linearsvm.jpg}
+            \caption[]{{\small SVM with linear kernel}}    
+        \end{subfigure}
+        \vskip\baselineskip
+        \begin{subfigure}[b]{0.475\textwidth}   
+            \centering 
+            \includegraphics[width=\textwidth]{imgs/auc_MLP.jpg}
+            \caption[]{{\small Multilayer Perceptron}}    
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.475\textwidth}   
+            \centering 
+            \includegraphics[width=\textwidth]{imgs/auc_LR.jpg}
+            \caption[]{{\small Logistic regression}}    
+        \end{subfigure}
+        \caption[]{\small ROC graph of the best model of each family} 
+        \label{fig:test_results}
+    \end{figure*}
+
 
 \subsection*{Other considered approaches.}
 
 \begin{enumerate}
-  \item Along with the landmark intensity, we made attempts where the landmark locations were used, this resulted in a clear overfitting. As a regularization approach, we centered these location in order to make them image size-invariant. As a result the performance improved in Task 1 but lowered in Task 2.
-  \item At one point, MTCNN and dlib did not return the face and landmarks for every image, at training we decided to skip that image it those features were not detected. However, this cannot be applied to test cases. We decided that if given a test case, we could not detect its features, we would assume it has the same features of a previous image of the same class. In the end, we needn't this but we are leaving all the code checks in case it is needed in the future.
+  \item Along with the landmark intensity, we made attempts where the landmark locations were used, this resulted in a clear overfitting. As a regularization approach, we centered those locations in order to make them image size-invariant. As a result the performance improved in Task 1 but lowered in Task 2.
+  \item At one point, MTCNN and dlib did not return the face and landmarks for every image, at training we decided to skip that image it those features were not detected. However, this cannot be applied to test cases. We decided that, if given a test case we could not detect its features, we would assume it has the same features of a previous image of the same class. In the end, we needn't this but we are leaving all the code checks in case it is needed in the future.
   \item More models have been tested in the grid search, such as Random forests and other boosting techniques, however, they performed so poorly compared to the other models that we decided to not include them (decreasing the computational cost of the grid search).
 \end{enumerate}
 
@@ -132,6 +163,36 @@ From each family, the best model in training is chosen and evaluated over the \t
 \textit{The goal of this task is to evaluate the DeepFake detection system developed in Task 1 with a new database (not seen during the development/training of the detector). In this task, you should use only the Celeb-DF. You only need to evaluate your fake detector developed in Task 1 over the \texttt{evaluation} dataset of Celeb-DF, not train again with them.}
 
 \textbf{a)} \textit{Describe the results achieved by your DeepFake detection system developed in Task 1 using the evaluation dataset of the Celeb-DF database. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 1.}
+
+As we said in the previous section, our considered model is the multilayer perceptron with the parameters achieved during the grid search. 
+
+The model evaluation in the new dataset raises an AUC of 0.57166, this value is considerably lower than the ones achieved during the training phase, which makes sense considering that the first dataset from AUDFV was easier than this one from Celeb-DF in the sense that the deep fake was more easily spotted by an human. 
+
+
+    \begin{figure*}
+        \centering
+        \begin{subfigure}[b]{0.475\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{imgs/SVM_test.PNG}
+            \caption[]{{\small SVM with kernel RBF}}    
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.475\textwidth}  
+            \centering 
+            \includegraphics[width=\textwidth]{imgs/MLP_test.PNG}
+            \caption[]{{\small Multilayer perceptron}}    
+        \end{subfigure}
+        \caption[]{\small ROC graph over Celeb-DF database} 
+        \label{fig:test_celeb}
+    \end{figure*}
+
+
+
+In the training dataset there are usually vertical nad horizontal markings surrounding the face. In this new dataset, deepfakes have a higher quality and do not show such markings. In short, the selected model scales poorly to this dataset because the training model is not \textbf{representative} enough.
+
+
+It is worth mentioning that even though we selected the perceptron as our testing model, we checked the performance of the other three. In this results, we saw that the SVM with RBF kernel achieved a \( 0.601 \) AUC. This means that the SVM model is the one that did the best at learning \emph{what a deep fake is} and did not overfit as much as the others.
+
 
 \section*{Task 3: inter-database proposal}
 
