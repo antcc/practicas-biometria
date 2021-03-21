@@ -22,11 +22,10 @@
 \usepackage{engord}
 \usepackage{parskip}
 \usepackage{minted}
-\usepackage{cite}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{setspace}
-\usepackage[center]{caption}
+%\usepackage[center]{caption}
 \usepackage{placeins}
 \usepackage{color}
 \usepackage{amsmath}
@@ -35,13 +34,7 @@
 \usepackage{pdfpages}
 % \titlespacing*{\subsection}{0pt}{5.5ex}{3.3ex}
 %\titlespacing*{\section}{0pt}{5.5ex}{1ex}
-
-
-\usepackage[
-  style=apa
-]{biblatex}
-
-\addbibresource{bibliography.bib}
+\usepackage{natbib}
 
 \author{Luis Antonio Ortega Andrés\\Antonio Coín Castro}
 \date{\today}
@@ -51,15 +44,12 @@
  pdftitle={},
  pdfkeywords={},
  pdfsubject={},
- pdflang={Spanish}}}
+ pdflang={Spanish}
+ }
 
 \begin{document}
 
 \maketitle
-
-\section*{General comments}
-
-We will use Keras ~\parencite{chollet2015keras}.
 
 \section*{Task 1: intra-database analysis}
 
@@ -70,6 +60,72 @@ We will use Keras ~\parencite{chollet2015keras}.
 \textbf{b)} \textit{Provide all details of the development/training procedure followed and the results achieved using the development dataset of the UADFV database. Show the results achieved in terms of Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC).}
 
 \textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
+
+First of all, we are reviewing the followed training procedure along with the acquired results test evaluations. Secondly, all the approaches that have being considered will be summarized with reasons for their throwaway.
+
+\subsection*{Preprocessing}
+
+Let us begin with the preprocessing procedure, for both training and test datasets, the given images from UADFV have been preprocessed following these steps:
+\begin{enumerate}
+  \item We use MTCNN face detector (\cite{zhang2016joint}) in order to crop the section of the image that contains the face. The aim of this phase is to erase those parts of the image that are not relevant for our classification task.
+  \item We used \texttt{dlib} (\cite{dlib09}) in order to retrieve landmarks from face images. With this method, the \( (x,y) \) position of \( 68 \) landmarks is generated per sample image.
+  \item We add random noise to the image, more precisely, we randomly decide wether the image is slightly blurred using a GaussianBlur filter from OpenCV (\cite{opencv_library}) or it is perturbed using Gaussian noise. Each of the procedures is equally probable and every image goes through one or the other but never both. The aim is this procedure is to add some regularization to the learning method, as a result, this is only applied to training samples, that is, validation and test are not perturbed.
+  \item The face image is transformed into a gray-scale image and the intensity of such gray is retrieved from the landmarks retrieved by \texttt{dlib}.
+  \item The feature vector of each image is composed by each landmark intensity, this results in 68 features for each image.
+\end{enumerate}
+
+From the procedure described above, the training dataset is split into actual training and validation using \texttt{Kera}'s  \texttt{flow\_from\_directory} (\cite{chollet2015keras}), with \( 607 \) and \( 151 \) samples respectively.
+
+\subsection*{Training}
+The training procedure is the following, we considered a parameter-optimization Grid search using \texttt{Sklearn}'s API (\cite{sklearn_api}). The considered families of models are
+\begin{itemize}
+  \item SVM with RBF and linear kernel.
+  \item Multi-layer perceptron.
+  \item Logistic regression.
+\end{itemize}
+Each of these families is tested with a wide range of possible parameters and the usage of principal components analysis for feature reduction. 
+
+For example, the number of considered hidden layers for the NLP are \( \{(50), (100), (50, 50), (100, 100)\} \) and the linear kernel SVM regularization term \( C \) varies from \( 10^{-3} \) to \( 10^{3} \) with 40 equidistant values.
+
+Each of these models is trained to minimize the AUC metric, and not to maximize the classification accuracy.
+
+\subsection*{Test results}
+
+From each family, the best model in training is chosen and evaluated over the \textbf{evaluation set}, the results are the following:
+\begin{itemize}
+  \item \textbf{SVM RBF: } 
+    \begin{itemize}
+      \item \emph{PCA}: True,
+      \item \emph{Parameters: } \( C =  51.7947\) and \( \gamma = 0.0026\).
+      \item \emph{Test results: } Accuracy = \( 0.7714 \) and AUC = \( 0.8345 \) 
+    \end{itemize}
+  \item \textbf{SVM Lineal: }
+    \begin{itemize}
+      \item \emph{PCA}: True,
+      \item \emph{Parameters: } \( C =  0.01701\).
+      \item \emph{Test results: } Accuracy = \( 0.8381 \) and AUC = \( 0.9164 \) 
+    \end{itemize}
+  \item \textbf{MLP: }
+    \begin{itemize}
+      \item \emph{PCA}: False,
+      \item \emph{Parameters: } activation \( = ReLU \), hidden layers \( = (50) \).
+      \item \emph{Test results: } Accuracy = \( 0.8810 \) and AUC = \( 0.9383 \) 
+    \end{itemize}
+  \item \textbf{LR: }
+    \begin{itemize}
+      \item \emph{PCA}: True,
+      \item \emph{Parameters: } \( C =  0.78804\).
+      \item \emph{Test results: } Accuracy = \( 0.8381 \) and AUC = \( 0.9005 \) 
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Other considered approaches.}
+
+\begin{enumerate}
+  \item Along with the landmark intensity, we made attempts where the landmark locations were used, this resulted in a clear overfitting. As a regularization approach, we centered these location in order to make them image size-invariant. As a result the performance improved in Task 1 but lowered in Task 2.
+  \item At one point, MTCNN and dlib did not return the face and landmarks for every image, at training we decided to skip that image it those features were not detected. However, this cannot be applied to test cases. We decided that if given a test case, we could not detect its features, we would assume it has the same features of a previous image of the same class. In the end, we needn't this but we are leaving all the code checks in case it is needed in the future.
+  \item More models have been tested in the grid search, such as Random forests and other boosting techniques, however, they performed so poorly compared to the other models that we decided to not include them (decreasing the computational cost of the grid search).
+\end{enumerate}
 
 \section*{Task 2: inter-database analysis}
 
@@ -91,6 +147,7 @@ We will use Keras ~\parencite{chollet2015keras}.
 %% Bibliography
 %%%%%%%%%%%%%%%%
 
-\printbibliography
+\bibliographystyle{authordate1}
+\bibliography{bibliography}
 
 \end{document}
