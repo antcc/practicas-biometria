@@ -82,7 +82,7 @@ The final step of our model is a machine learning model that acts as a classifie
 
 \textbf{b)} \textit{Provide all details of the development/training procedure followed and the results achieved using the development dataset of the UADFV database. Show the results achieved in terms of Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC).}
 
-For the training procedure we performed a hyperparameter grid search using \texttt{Sklearn}'s API \citep{sklearn_api}, in which each family of classifiers mentioned above is tested with a wide range of possible hyperparameters to maximize the AUC metric. For example, the number of hidden layers considered for the MLP are \( \{(50), (100), (50, 50), (100, 100)\} \), and the linear SVM regularization term \( C \) varies from \( 10^{-3} \) to \( 10^{3} \) with 40 equidistant steps. To make the process fair, we employ \textbf{5-fold cross validation} to select the best hyperparameters for each model, and in the end we select the model that achieved the highest cross-validated AUC. Note that each family of classifiers is trained using the same folds, so the results are comparable.
+For the training procedure we performed a hyperparameter grid search using \texttt{Sklearn}'s API \citep{sklearn_api}, in which each family of classifiers mentioned above is tested with a wide range of possible hyperparameters to maximize the AUC metric. For example, the number and size of the hidden layers considered for the MLP are \( \{(50), (100), (50, 50), (100, 100)\} \), and the linear SVM regularization term \( C \) varies from \( 10^{-3} \) to \( 10^{3} \) with 40 equidistant steps. To make the process fair, we employ \textbf{5-fold cross validation} to select the best hyperparameters for each model, and in the end we select the model that achieved the highest cross-validated AUC. Note that each family of classifiers is trained using the same folds, so the results are comparable.
 
 Before completing the training pipeline, we added the possibility to train each classifier \textbf{with and without PCA reduction}, to see whether it would have a positive impact on the final result. The fraction of explained variance to be retained was also an hyperparameter, whose search space was $\{0.90, 0.95, 0.99\}$. An important detail is that the data is first standardized to have zero mean and unit variance, since we observed that the performance of the classifiers was noticeably better after this normalization.
 
@@ -125,7 +125,7 @@ Having chosen our model, we simply evaluate it on the previously unseen evaluati
 
 \begin{enumerate}
   \item We considered extracting features using an image destriptor such as SURF or SIFT, and then following the Bag of Visual Words technique. However, the results obtained were worse, so we discarded this approach.
-  \item Along with the landmarks intensity, we made some attempts at using the the landmarks locations as features, but this resulted in overfitting. As a regularization technique, we centered those locations (substracting the mean) in order to make them location invariant. The performance improved a bit but in the end we decided to stick to the face landmarks only.
+  \item Along with the landmarks intensity, we made some attempts at using the the landmarks locations as features, but this resulted in overfitting. As a regularization technique, we tried to center those locations (substracting the mean) in order to make them location invariant. The performance improved a bit but the overall model was still worse, so in the end we decided to stick to the landmarks intensity only.
   \item At one point, MTCNN did not correctly detect the faces for every image, and during training we decided to simply skip these images. However, since we cannot skip test cases, we decided that an image with no face detected would be assumed to have the same features as the last image with the same label. In the end we solved the underlying problem (by resizing the input images), but we left all the code checks just in case they were needed in the future.
   \item More models were tested in the grid search, such as Random Forests and other boosting techniques. However, they performed so poorly compared to the rest that we decided not to include them in the final report.
 \end{enumerate}
@@ -158,11 +158,11 @@ We obtain an AUC of 0.64, which is considerably lower than the one achieved in t
 
 In the first place, we tried to increase the quantity of data we had to train our model. To build a new training set, we used the full given UADFV dataset (merging development and evaluation) and several samples of the DeepFakeTIMIT and VidTIMIT databases \citep{sanderson2009multi}. As DeepFakeTIMIT is composed of videos, we developed a python script in order to take frames from the videos (\texttt{TIMIT\_data\_preprocess.py}). Moreover, since these datasets have a relatively low diversity (only 32 different people appear on the videos), we decided not to take all the samples we could, but instead get a random sample of both real and fakes images while we cropped a \( 160 \times 160 \) face image using MTCNN (\texttt{Face\_detector\_splitter.py}).
 
-Having aumented our data, we followed different approaches in order to find and optimize the most suitable technique for this problem. In all cases the \textbf{training dataset} was composed of \( 1829 \) \( 160\times 160 \) face samples, and the \textbf{evaluation dataset} was composed of the \( 160 \times 160 \) face crops of each sample (out of 600) in the given \texttt{Celeb-DF} dataset. Although the MTCNN face detector remains an essential part of our model architecture, we saved the cropped faces to disk and worked only with them to increase the computational efficiency.
+After increasing the number of training samples, we followed different approaches in order to find and optimize the most suitable technique for this problem. In all cases the \textbf{training dataset} was composed of \( 1829 \) \( 160\times 160 \) face samples, and the \textbf{evaluation dataset} was composed of the \( 160 \times 160 \) face crops of each sample (out of 600) in the given \texttt{Celeb-DF} dataset. Although the MTCNN face detector remains an essential part of our model architecture, we saved the cropped faces to disk and worked only with them to increase the computational efficiency.
 
 \subsection*{Train the same model with more data}
 
-First of all, we wanted to check how the best model found of the previous task behaved with this new training dataset, and set a \emph{baseline} to be compared to the subsequent attempts.
+First of all, we wanted to check how the best model found in the previous task behaved with this new training dataset, and set a \emph{baseline} to be compared to the subsequent attempts.
 
 The procedure was simple and can be seen in the notebook \texttt{Task3\_ML.ipynb}. We reused the majority of the code developed for the previous task and created a pipeline with the optimal classifier. The AUC obtained using this approach was 0.67, which is only a bit better that what we had before.
 
@@ -182,7 +182,7 @@ However, after tuning the parameters for a while using a validation set and the 
 
 \subsection*{Fine-tune a pre-trained deep learning model}
 
-As out last attempt, we aimed to fine-tune a pre-trained deep neural network. We thought that we could benefit from a large network that was already trained on a big database, and perform transfer learning to try to solve our detection problem. We used the \texttt{Keras} API, and the steps followed were\footnote{We followed the recommendations in \url{https://keras.io/guides/transfer_learning/}}:
+As our last attempt, we aimed to fine-tune a pre-trained deep neural network. We thought that we could benefit from a large network that was already trained on a big database, and perform transfer learning to try to solve our detection problem. We used the \texttt{Keras} API and followed these steps\footnote{We followed the recommendations in \url{https://keras.io/guides/transfer_learning/}}:
 
 \begin{enumerate}
   \item We loaded a CNN pre-trained on the ImageNet database \citep{deng2009imagenet}.  We tested several well-known models such as VGG19, ResNet50, InceptionV3, XceptionNet...
@@ -195,7 +195,7 @@ We retain the random data augmentation technique from previous attempts, but we 
 
 \begin{itemize}
   \item The chosen base model was the VGG19 network \citep{simonyan2015deep}. We needed to add a preliminary preprocessing step to accomodate the images to VGG19's expectations (using the function \texttt{vgg19.preprocess\_input}).
-  \item The top model chosen was a small model consisting on two fully connected layers with ReLu activation and 512 and 256 units, respectively, with a Dropout layer of $0.25$ after the first and one of $0.5$ after the second. The Dropout layers are regularizing layers that ``turn off'' a fraction of the neurons during training, to force the model to learn more relevant features. At the end we put a Dense layer with one unit and sigmoid activation to obtain the probabilities of fake and real.
+  \item The top model chosen was a small model consisting on two fully connected layers with ReLu activation and 512 and 256 units respectively, with a Dropout layer of $0.25$ after the first one and another of $0.5$ after the second one. The Dropout layers are regularizing layers that ``turn off'' a fraction of the neurons during training, to force the model to learn more relevant features. At the end we put a Dense layer with one unit and sigmoid activation to obtain the probabilities of fake and real.
   \item We trained the top model for 3 epochs, and then unfroze the last convolutional block of VGG19 and trained for 15 more epochs, in this case using the SGD optimizer with a learning rate of $5\cdot 10^{-4}$.
 \end{itemize}
 
@@ -224,7 +224,9 @@ The conclusions we draw from this assignment are summarized below:
   \item We can overcome the need for many training images using transfer learning and fine-tuning a pre-trained network, but we have to pay close attention to the process and employ a suite of regularization techniques to avoid overfitting.
 \end{itemize}
 
-As a final comment, we considered some alternative approaches to feature extraction, but we didn't have time to implement them. For example, we thought it would be a good idea to obtain specific masks for different parts of the face, such as eyes, teeth, nose, etc, and in general to adopt a more fine-grained approach when it comes to feature extraction. Moreover, it would be good to have an in-depth look at how deepfakes are usually generated (using GANs), and then try to exploit any weaknesses in the process to improve our detection performance.
+As a final comment, we considered some alternative feature extraction techniques, but we didn't have time to implement them. For example, we thought it would be a good idea to obtain specific masks for different parts of the face, such as eyes, teeth, nose, etc, and in general to adopt a more fine-grained approach when it comes to feature extraction. Moreover, we thought it would be good to have an in-depth look at how deepfakes are usually generated (using GANs), and then try to exploit any weaknesses in the process to improve our detection performance.
+
+We also tried to obtain more training samples from various databases such as FaceForensics++ \citep{rossler2018faceforensics}, but they were either hard to obtain or difficult to preprocess to suit our specific needs. Nonetheless, we think that having a bigger and more diverse training set would substantially increase the performance of the detection model.
 
 %%%%%%%%%%%%%%%%
 %% Bibliography
