@@ -35,6 +35,7 @@
 % \titlespacing*{\subsection}{0pt}{5.5ex}{3.3ex}
 %\titlespacing*{\section}{0pt}{5.5ex}{1ex}
 \usepackage{natbib}
+\setcitestyle{authoryear,aysep={,}}
 
 \author{Luis Antonio Ortega Andrés\\Antonio Coín Castro}
 \date{\today}
@@ -44,7 +45,7 @@
  pdftitle={},
  pdfkeywords={},
  pdfsubject={},
- pdflang={Spanish}
+ pdflang={English}
  }
 
 \begin{document}
@@ -55,143 +56,98 @@
 
 \textit{The goal of this task is to develop and evaluate DeepFake detection systems over the same database. In this task, you should use only the UADFV database, which is divided into \texttt{development} and \texttt{evaluation} datasets.}
 
+The notebook associated with this task is \texttt{Task1-2.ipynb}.
+
 \textbf{a)} \textit{Provide all details (including links or references if needed) of your proposed DeepFake detection system.}
+
+Our DeepFake detection system consists on the following modules:
+\subsection*{Preprocessing}
+
+First of all, the given images from UADFV have been preprocessed following these steps:
+\begin{enumerate}
+  \item The data is loaded using \texttt{Keras}' \texttt{flow\_from\_directory} function \citep{chollet2015keras}, so that we don't have to keep all images in memory while training our model. We resize each image to a resolution of $768\times 768$.
+  \item We use the MTCNN face detector \citep{zhang2016joint} in order to crop the section of the image that contains the face. The aim of this phase is to erase those parts of the image that are not relevant for our classification task.
+  \item We add random noise to the images as a form of regularization, to force our classifier to learn more relevant features. More precisely, we randomly decide wether the image is slightly blurred using a Gaussian filter from OpenCV \citep{opencv_library}, or simply perturbed by Gaussian noise. Each of these outcomes is equally likely and every image goes through one or the other, but never both. Note that these perturbations are only applied to training samples and not to the evaluation images.
+\end{enumerate}
+
+\subsection*{Feature extraction}
+
+We decided that the best way of extracting features from the faces was \texttt{dlib}'s 68-point face landmark detector \citep{dlib09}. For each (cropped) face image, we obtain the spatial position of the 68 landmarks, and our final feature vector is composed of the gray-scale intensities of these landmarks. We then center each feature vector to have zero mean.
+
+We also considered the possibility of applying PCA for dimensionality reduction, but since we wanted to try both approaches, we delegated this decision to the actual training step.
+
+\subsection*{Classifier}
+
+The final step of our model is a machine learning model that acts as a classifier to which the feature vectors are fed for training. At first we considered four distinct models for this job: a \textbf{Linear SVM}, a \textbf{SVM with RBF kernel}, a \textbf{2-layer perceptron} and a \textbf{Logistic Regression} model. The process by which a final classifier was selected can be seen on the next section.
 
 \textbf{b)} \textit{Provide all details of the development/training procedure followed and the results achieved using the development dataset of the UADFV database. Show the results achieved in terms of Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC).}
 
-\textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
+For the training procedure we performed a hyperparameter grid search using \texttt{Sklearn}'s API \citep{sklearn_api}, in which each family of classifiers mentioned above is tested with a wide range of possible hyperparameters to maximize the AUC metric. For example, the number of hidden layers considered for the MLP are \( \{(50), (100), (50, 50), (100, 100)\} \), and the linear SVM regularization term \( C \) varies from \( 10^{-3} \) to \( 10^{3} \) with 40 equidistant steps. To make the process fair, we employ \textbf{5-fold cross validation} to select the best hyperparameters for each model, and in the end we select the model that achieved the highest cross-validated AUC. Note that each family of classifiers is trained using the same folds, so the results are comparable.
 
-First of all, we are reviewing the followed training procedure along with the acquired results at test evaluations. Secondly, all the approaches that have being considered will be summarized with their reasons for being discarded.
+Before completing the training pipeline, we added the possibility to train each classifier \textbf{with and without PCA reduction}, to see whether it would have a positive impact on the final result. The fraction of explained variance to be retained was also an hyperparameter, whose search space was $\{0.90, 0.95, 0.99\}$. An important detail is that the data is first standardized to have zero mean and unit variance, since we observed that the performance of the classifiers was noticeably better after this normalization.
 
-\subsection*{Preprocessing}
-
-Let us begin with the preprocessing procedure, for both training and test datasets, the given images from UADFV have been preprocessed following these steps:
-\begin{enumerate}
-  \item We use MTCNN face detector (\cite{zhang2016joint}) in order to crop the section of the image that contains the face. The aim of this phase is to erase those parts of the image that are not relevant for our classification task.
-  \item We used \texttt{dlib} (\cite{dlib09}) in order to retrieve landmarks from face images. With this method, the \( (x,y) \) position of \( 68 \) landmarks is generated per sample image.
-  \item We add random noise to the image, more precisely, we randomly decide wether the image is slightly blurred using a GaussianBlur filter from OpenCV (\cite{opencv_library}) or it is perturbed using Gaussian noise. Each of the procedures is equally probable and every image goes through one or the other but never both. The aim is this procedure is to add some regularization to the learning method, as a result, this is only applied to training samples, that is, validation and test are not perturbed.
-  \item The face image is transformed into a gray-scale image and the intensity of such gray is retrieved from the landmarks retrieved by \texttt{dlib}.
-  \item The feature vector of each image is composed by each landmark intensity, this results in 68 features for each image.
-\end{enumerate}
-
-From the procedure described above, the training dataset is split into actual training and validation using \texttt{Kera}'s  \texttt{flow\_from\_directory} (\cite{chollet2015keras}), with \( 607 \) and \( 151 \) samples respectively.
-
-\subsection*{Training}
-The training procedure is the following, we considered a parameter-optimization Grid search using \texttt{Sklearn}'s API (\cite{sklearn_api}). The considered families of models are
-\begin{itemize}
-  \item SVM with RBF and linear kernel.
-  \item Multi-layer perceptron.
-  \item Logistic regression.
-\end{itemize}
-Each of these families is tested with a wide range of possible parameters and the usage of principal components analysis for feature reduction. 
-
-For example, the number of considered hidden layers for the NLP are \( \{(50), (100), (50, 50), (100, 100)\} \) and the linear kernel SVM regularization term \( C \) varies from \( 10^{-3} \) to \( 10^{3} \) with 40 equidistant values.
-
-Each of these models is trained to minimize the AUC metric, and not to maximize the classification accuracy.
-
-\subsection*{Evaluation results}
-
-From each family, the best model in training is chosen and evaluated over the \textbf{evaluation set}, the results are the following:
+The best models of each family after running the grid search are shown in Table \ref{tab:t1}, along with their cross-validated AUC scores.
 
 \begin{table}[H]
   \centering
   \begin{tabular}{llll}
-    \textbf{Model}      & \textbf{PCA} & \textbf{Parameters} & \textbf{AUC scoring} \\ \hline
-    SVM RBF             & Yes &      \( C = 51.79, \gamma = 0.002\)  &     \( 0.9707 \)       \\
-    SVM Linear          & Yes &   \(  C = 0.04923 \)   &   \( 0.9432 \)   \\
-    MLP                 & No  &  Nº hidden layers \( (100,) \)     &    \(  0.9826 \)          \\
-    Logistic regression & Yes & \( C = 0.788 \) &    \( 0.9826 \)        
+    \textbf{Model}      & \textbf{PCA} & \textbf{Parameters} & \textbf{AUC (CV)} \\ \hline
+    SVM RBF             & No &      \( C = 1.6681, \, \gamma = 0.0167\)  &     \( {\color{blue!80!black}{0.9937}} \)       \\
+    SVM Linear          & No &   \(  C = 0.0174 \)   &   \( 0.9186 \)   \\
+    MLP                 & No  &  $\alpha=0.2154$, \,size=$(100, 100)$ \)     &    \(  0.9883 \)          \\
+    LR & No & \( C = 0.1624 \) &    \( 0.9180 \)
     \end{tabular}
+    \caption{Results of the hyperparameter tuning phase.}
+    \label{tab:t1}
   \end{table}
 
-Given this results, the considered model for the test evaluation is the multilayer perceptron. However, we are showing the results obtained by the four models in order to highlight is this decision is the correct one.
+As we can see, the best performing model was the \textbf{non-linear SVM with RBF kernel using the raw features}, and this is the model that we choose as our final classifier (with the optimized parameters found). An interesting thing to note is that PCA was discarded on every model, probably because the number of raw features considered is not very high. The results of evaluating our chosen model on the whole development set can be seen on Figure \ref{fig:t1-roc-train}.
 
-\subsection*{Test results}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.6\textwidth]{img/1-roc-UADFV-train}
+  \caption{ROC curve and AUC value on UADFV's development set.}
+  \label{fig:t1-roc-train}
+\end{figure}
 
-The results for each model in the test partition are the following
+\textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
 
-\begin{itemize}
-  \item \textbf{SVM RBF: } Accuracy = \( 0.7619 \) and AUC = \( 0.8315 \) 
-  \item \textbf{SVM Lineal: } Accuracy = \( 0.8286 \) and AUC = \( 0.8883 \) 
-  \item \textbf{MLP: }Accuracy = \( 0.8762 \) and AUC = \( 0.9507 \) 
-  \item \textbf{LR: }Accuracy = \( 0.8238 \) and AUC = \( 0.8880 \) 
-\end{itemize}
+Having chosen our model, we simply evaluate it on the previously unseen evaluation set of UADFV database, and the results can be seen in Figure \ref{fig:t1-roc-test}. We obtain an AUC of $0.95$, quite close to the perfect score of $1.0$. We can say that we have succeeded in this task, since our model has learned to detect DeepFakes on the UADFV database at different threshold while avoiding overfitting.
 
-Where we can see that the multilayer perceptron (our selected model) achieves a 0.9363 AUC, slightly ahead of the rest. We can see the ROC curve achieved by each one of the models in Figure~\ref{fig:test_results}.
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.6\textwidth]{img/1-roc-UADFV}
+  \caption{ROC curve and AUC value on UADFV's evaluation set.}
+  \label{fig:t1-roc-test}
+\end{figure}
 
-
-    \begin{figure*}
-        \centering
-        \begin{subfigure}[b]{0.475\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{imgs/auc_svm.jpg}
-            \caption[]{{\small SVM with kernel RBF}}    
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.475\textwidth}  
-            \centering 
-            \includegraphics[width=\textwidth]{imgs/auc_linearsvm.jpg}
-            \caption[]{{\small SVM with linear kernel}}    
-        \end{subfigure}
-        \vskip\baselineskip
-        \begin{subfigure}[b]{0.475\textwidth}   
-            \centering 
-            \includegraphics[width=\textwidth]{imgs/auc_MLP.jpg}
-            \caption[]{{\small Multilayer Perceptron}}    
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.475\textwidth}   
-            \centering 
-            \includegraphics[width=\textwidth]{imgs/auc_LR.jpg}
-            \caption[]{{\small Logistic regression}}    
-        \end{subfigure}
-        \caption[]{\small ROC graph of the best model of each family} 
-        \label{fig:test_results}
-    \end{figure*}
-
-
-\subsection*{Other considered approaches.}
+\subsection*{Other approaches and failed attempts}
 
 \begin{enumerate}
-  \item Along with the landmark intensity, we made attempts where the landmark locations were used, this resulted in a clear overfitting. As a regularization approach, we centered those locations in order to make them image size-invariant. As a result the performance improved in Task 1 but lowered in Task 2.
-  \item At one point, MTCNN and dlib did not return the face and landmarks for every image, at training we decided to skip that image it those features were not detected. However, this cannot be applied to test cases. We decided that, if given a test case we could not detect its features, we would assume it has the same features of a previous image of the same class. In the end, we needn't this but we are leaving all the code checks in case it is needed in the future.
-  \item More models have been tested in the grid search, such as Random forests and other boosting techniques, however, they performed so poorly compared to the other models that we decided to not include them (decreasing the computational cost of the grid search).
+  \item We considered extracting features using an image destriptor such as SURF or SIFT, and then following the Bag of Visual Words technique. However, the results obtained were worse, so we discarded this approach.
+  \item Along with the landmarks intensity, we made some attempts at using the the landmarks locations as features, but this resulted in overfitting. As a regularization technique, we centered those locations (substracting the mean) in order to make them location invariant. The performance improved a bit but in the end we decided to stick to the face landmarks only.
+  \item At one point, MTCNN did not correctly detect the faces for every image, and during training we decided to simply skip these images. However, since we cannot skip test cases, we decided that an image with no face detected would be assumed to have the same features as the last image with the same label. In the end we solved the underlying problem (by resizing the input images), but we left all the code checks just in case they were needed in the future.
+  \item More models were tested in the grid search, such as Random Forests and other boosting techniques. However, they performed so poorly compared to the rest that we decided not to include them in the final report.
 \end{enumerate}
 
 \section*{Task 2: inter-database analysis}
 
 \textit{The goal of this task is to evaluate the DeepFake detection system developed in Task 1 with a new database (not seen during the development/training of the detector). In this task, you should use only the Celeb-DF. You only need to evaluate your fake detector developed in Task 1 over the \texttt{evaluation} dataset of Celeb-DF, not train again with them.}
 
+The notebook associated with this task is \texttt{Task1-2.ipynb}.
+
 \textbf{a)} \textit{Describe the results achieved by your DeepFake detection system developed in Task 1 using the evaluation dataset of the Celeb-DF database. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 1.}
 
-As we said in the previous section, our considered model is the multilayer perceptron with the parameters achieved during the grid search. 
+We evaluate the model established in the previous task (SVM with RBF kernel and optimized hyperparameters) on the evaluation set of Celeb-DF. The results achieved can be seen in Figure \ref{fig:t2}.
 
-The model evaluation in the new dataset raises an AUC of 0.57166, this value is considerably lower than the ones achieved during the training phase, which makes sense considering that the first dataset from AUDFV was easier than this one from Celeb-DF in the sense that the deep fake was more easily spotted by an human. 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.6\textwidth]{img/2-roc-celeb}
+  \caption{ROC curve and AUC value on Celeb-DF's evaluation set.}
+  \label{fig:t2}
+\end{figure}
 
-
-    \begin{figure*}
-        \centering
-        \begin{subfigure}[b]{0.475\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{imgs/SVM_test.PNG}
-            \caption[]{{\small SVM with kernel RBF}}    
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.475\textwidth}  
-            \centering 
-            \includegraphics[width=\textwidth]{imgs/MLP_test.PNG}
-            \caption[]{{\small Multilayer perceptron}}    
-        \end{subfigure}
-        \caption[]{\small ROC graph over Celeb-DF database} 
-        \label{fig:test_celeb}
-    \end{figure*}
-
-
-
-In the training dataset there are usually vertical nad horizontal markings surrounding the face. In this new dataset, deepfakes have a higher quality and do not show such markings. In short, the selected model scales poorly to this dataset because the training model is not \textbf{representative} enough.
-
-
-It is worth mentioning that even though we selected the perceptron as our testing model, we checked the performance of the other three. In this results, we saw that the SVM with RBF kernel achieved a \( 0.601 \) AUC. This means that the SVM model is the one that did the best at learning \emph{what a deep fake is} and did not overfit as much as the others.
+We obtain an AUC of 0.64, which is considerably lower than the one achieved in the previous task. This behaviour makes sense, considering that the training dataset was less challenging than this one, in the sense that the deepfakes were more easily spotted by a human. In the UADFV dataset there were usually vertical and horizontal strips surrounding the place where the face exchange had taken place, and in this new dataset deepfakes have a higher quality and do not show such markings. In short, our detection model scales poorly to this dataset because the data in which it was trained \textbf{is not representative enough} of this new evaluation set.
 
 
 \section*{Task 3: inter-database proposal}
@@ -200,9 +156,56 @@ It is worth mentioning that even though we selected the perceptron as our testin
 
 \textbf{a)} \textit{Describe the improvements carried out in your proposed DeepFake detection system in comparison with Task 1.}
 
+\subsection*{Train the same model with more data}
+\texttt{Task3\_ML.ipynb}
+
+Describe from where we have obtained the data (database, scripts to extract frames from videos, number of new examples, references).
+
+AUC obtained: 0.67 (only the number, no graph)
+
+This approach is not good enough.
+
+\subsection*{Consider alternative features}
+
+Bib-citation to Facenet. Contar que hace face embedding a 128 características.
+
+AUC obtained: 0.7 (only the number, no graph)
+
+\texttt{Task3\_Facenet.ipynb}
+
+\subsection*{Train a deep learning model from scratch}
+
+\texttt{Task3\_DL.ipynb}
+
+Fracaso absoluto. contar modelo usado por encima.
+
+\subsection{Fine-tune a pre-trained deep learning model}
+
+\texttt{Task3\_Finetune.ipynb}
+
+contar proceso de finetuning.
+
+3 épocas + 15 épocas.
+
+Bib-citation to VGG19.
+
+
 \textbf{b)} \textit{Describe the results achieved by your enhanced DeepFake detection system over the final evaluation dataset. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 2.}
 
+Final graph (AUC 0.81).
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.6\textwidth]{img/3-finetune-roc-celeb}
+  \caption{ROC curve and AUC value on Celeb-DF's evaluation set for our enhanced model.}
+  \label{fig:t3}
+\end{figure}
+
 \textbf{c)} \textit{Indicate the conclusions and possible future improvements}.
+
+Not enough data; finetuning is essential; Deep learning outperforms classical approaches when used appropriately.
+
+face align, face masks, one-to-many, many-to-one, (eye, mouth, teeth,... more fine grained approach to feature extraction.)
 
 %%%%%%%%%%%%%%%%
 %% Bibliography
