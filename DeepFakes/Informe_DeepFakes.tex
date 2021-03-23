@@ -78,7 +78,7 @@ We also considered the possibility of applying PCA for dimensionality reduction,
 
 \subsection*{Classifier}
 
-The final step of our model is a machine learning model that acts as a classifier to which the feature vectors are fed for training. At first we considered four distinct models for this job: a \textbf{Linear SVM}, a \textbf{SVM with RBF kernel}, a \textbf{2-layer perceptron} and a \textbf{Logistic Regression} model. The process by which a final classifier was selected can be seen on the next section.
+The final step of our model is a machine learning model that acts as a classifier to which the feature vectors are fed for training. At first we considered four distinct families of models for this job: \textbf{Linear SVM}, \textbf{SVM with RBF kernel}, \textbf{2-layer perceptron} and \textbf{Logistic Regression} models. The process by which a final classifier was selected can be seen on the next section.
 
 \textbf{b)} \textit{Provide all details of the development/training procedure followed and the results achieved using the development dataset of the UADFV database. Show the results achieved in terms of Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC).}
 
@@ -94,7 +94,7 @@ The best models of each family after running the grid search are shown in Table 
     \textbf{Model}      & \textbf{PCA} & \textbf{Parameters} & \textbf{AUC (CV)} \\ \hline
     SVM RBF             & No &      \( C = 1.6681, \, \gamma = 0.0167\)  &     \( {\color{blue!80!black}{0.9937}} \)       \\
     SVM Linear          & No &   \(  C = 0.0174 \)   &   \( 0.9186 \)   \\
-    MLP                 & No  &  $\alpha=0.2154$, \,size=$(100, 100)$ \)     &    \(  0.9883 \)          \\
+    MLP                 & No  &  \(\alpha=0.2154, \,size=(100, 100) \)     &    \(  0.9883 \)          \\
     LR & No & \( C = 0.1624 \) &    \( 0.9180 \)
     \end{tabular}
     \caption{Results of the hyperparameter tuning phase.}
@@ -156,39 +156,41 @@ We obtain an AUC of 0.64, which is considerably lower than the one achieved in t
 
 \textbf{a)} \textit{Describe the improvements carried out in your proposed DeepFake detection system in comparison with Task 1.}
 
+For this task, we followed different approaches in order to find and optimise the most suitable technique for this problem. For every of the following aproaches the \textbf{training dataset} was composed of \( 1823 \) \( 160\times 160 \) face samples obtained via \texttt{mtcnn}. To build this training set we used the full given set of UADFV and several samples (around \( 1000 \)) of \textbf{DeepfakeTimit} and \textbf{vidTimit} (\cite{sanderson2009multi}). As DeepfakeTimit is composed of videos, we a \texttt{python script} (\texttt{TIMIT\_data\_preprocess.py}) in order to take frames from such videos. As these dataset have pretty low diversity (only 32 different persons appear on the videos), we decided to not to take all the samples we could, but get a random sample of both real and fakes images while we cropped the \( 160 \times 160 \) face image (\texttt{Face\_detector\_splitter.py}).
+
+On the other hand, the \textbf{evaluation dataset} is composed of the \( 160 \times 160 \) faces of each sample in the given \texttt{Celeb-DF} dataset. 
+
+Both, training and evaluation sets can be found in (files).
+
 \subsection*{Train the same model with more data}
-\texttt{Task3\_ML.ipynb}
 
-Describe from where we have obtained the data (database, scripts to extract frames from videos, number of new examples, references).
+In this attempt, we aimed to check how the best model of the previous task behaved in this one. This approach is used to set a \emph{starting line} to be compared to the subsequent attempts.
 
-AUC obtained: 0.67 (only the number, no graph)
-
-This approach is not good enough.
+The procedure was simple and can be seen in \texttt{Task3\_ML.ipynb}, we reused part of the code developed for the previous task and create a pipeline with the optimal classifier. The AUC obtained using this approach is 0.67.
 
 \subsection*{Consider alternative features}
 
-Bib-citation to Facenet. Contar que hace face embedding a 128 características.
+In this approach we intended to use \texttt{Facenet} (\cite{Schroff_2015}) to obtain a more representative set of features compared to the ones computed by \texttt{dlib}. To this end, we took a pre-trained model of Facenet that performed an embedding to \( 128 \) features and used these to train and cross-validate the same models considered in Task 1.
 
-AUC obtained: 0.7 (only the number, no graph)
+As a result, the chosen model was a RBF SVM with regularization term \( C = 4.6415 \) and kernel length \( \gamma = 0.01668 \), giving an AUC of \( 0.7 \) on the evaluation dataset.
 
-\texttt{Task3\_Facenet.ipynb}
+This approach can be consulted in \texttt{Task3\_Facenet.ipynb}.
 
 \subsection*{Train a deep learning model from scratch}
 
-\texttt{Task3\_DL.ipynb}
 
-Fracaso absoluto. contar modelo usado por encima.
+In this attempt we wanted to take advantage of the increased number fo samples in the training dataset to use a \emph{not so deep} convolutional network for the classification task. We considered two blocks of convolution-activation-dropout and 2 fully connected layers for the model.  
 
-\subsection{Fine-tune a pre-trained deep learning model}
+In the end, after tunning the parameters for a while, the model either overfitted to the training dataset or did not learn at all. The general structure can be found at \texttt{Task3\_DL.ipynb}
 
-\texttt{Task3\_Finetune.ipynb}
+\subsection*{Fine-tune a pre-trained deep learning model}
 
-contar proceso de finetuning.
 
-3 épocas + 15 épocas.
+As out last attempt, we aimed to fine-tune a pre-trained deep neural network. To this end, we tested several well-known models as VGG19, XceptionNet..., dropped the last layers and used a pair of fully connected layers to make the classification. The aim is to use the higher feature extraction  potential of those pre-trained models and make a classification with them.
 
-Bib-citation to VGG19.
+In order to fine-tune de model, we froze the layers from the pre-trained model and trained the full one just a few epochs. The objective is that the final new layers learn to use the features to the new classification task. After this, we defroze all the layers and trained the full model for several epochs.
 
+In the end, the pre-trained model that performed the best is VGG19 (\cite{simonyan2015deep}) with 3 initial epochs followed by another 15 (\texttt{Task3\_Finetune.ipynb}).
 
 \textbf{b)} \textit{Describe the results achieved by your enhanced DeepFake detection system over the final evaluation dataset. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 2.}
 
