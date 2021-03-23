@@ -101,7 +101,7 @@ The best models of each family after running the grid search are shown in Table 
     \label{tab:t1}
   \end{table}
 
-As we can see, the best performing model was the \textbf{non-linear SVM with RBF kernel using the raw features}, and this is the model that we choose as our final classifier (with the optimized parameters found). An interesting thing to note is that PCA was discarded on every model, probably because the number of raw features considered is not very high. The results of evaluating our chosen model on the whole development set can be seen on Figure \ref{fig:t1-roc-train}.
+As we can see, the best performing model was the \textbf{non-linear SVM with RBF kernel using the raw features}, and this is the model that we choose as our final classifier (with the optimized parameters found). An interesting thing to note is that PCA was discarded on every model, probably because the number of raw features considered is not very high and the model wouldn't benefit from having less features. The results of evaluating our chosen model on the whole development set can be seen on Figure \ref{fig:t1-roc-train}, in which we see that we achieve a perfect score.
 
 \begin{figure}[h!]
   \centering
@@ -112,7 +112,7 @@ As we can see, the best performing model was the \textbf{non-linear SVM with RBF
 
 \textbf{c)} \textit{Describe the final evaluation of your proposed DeepFake detection system and the results achieved using the evaluation dataset (not used for training). Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results.}
 
-Having chosen our model, we simply evaluate it on the previously unseen evaluation set of UADFV database, and the results can be seen in Figure \ref{fig:t1-roc-test}. We obtain an AUC of $0.95$, quite close to the perfect score of $1.0$. We can say that we have succeeded in this task, since our model has learned to detect DeepFakes on the UADFV database at different threshold while avoiding overfitting.
+Having chosen our model, we simply evaluate it on the previously unseen evaluation set of the UADFV database, and the results can be seen in Figure \ref{fig:t1-roc-test}. We obtain an AUC of $0.95$, quite close to the perfect score of $1.0$. Since there was no sudden drop in the performance of the model, it is safe to assume that the distribution of the evaluation set is more or less the same as that of the development set (as it should be). We can say that we have succeeded in this task, since our model has learned to detect DeepFakes on the UADFV database while avoiding overfitting.
 
 \begin{figure}[h!]
   \centering
@@ -156,45 +156,54 @@ We obtain an AUC of 0.64, which is considerably lower than the one achieved in t
 
 \textbf{a)} \textit{Describe the improvements carried out in your proposed DeepFake detection system in comparison with Task 1.}
 
-For this task, we followed different approaches in order to find and optimise the most suitable technique for this problem. For every of the following aproaches the \textbf{training dataset} was composed of \( 1823 \) \( 160\times 160 \) face samples obtained via \texttt{mtcnn}. To build this training set we used the full given set of UADFV and several samples (around \( 1000 \)) of \textbf{DeepfakeTimit} and \textbf{vidTimit} (\cite{sanderson2009multi}). As DeepfakeTimit is composed of videos, we a \texttt{python script} (\texttt{TIMIT\_data\_preprocess.py}) in order to take frames from such videos. As these dataset have pretty low diversity (only 32 different persons appear on the videos), we decided to not to take all the samples we could, but get a random sample of both real and fakes images while we cropped the \( 160 \times 160 \) face image (\texttt{Face\_detector\_splitter.py}).
+In the first place, we tried to increase the quantity of data we had to train our model. To build a new training set, we used the full given UADFV dataset (merging development and evaluation) and several samples of the DeepFakeTIMIT and VidTIMIT databases \citep{sanderson2009multi}. As DeepFakeTIMIT is composed of videos, we developed a python script in order to take frames from the videos (\texttt{TIMIT\_data\_preprocess.py}). Moreover, since these datasets have a relatively low diversity (only 32 different people appear on the videos), we decided not to take all the samples we could, but instead get a random sample of both real and fakes images while we cropped a \( 160 \times 160 \) face image using MTCNN (\texttt{Face\_detector\_splitter.py}).
 
-On the other hand, the \textbf{evaluation dataset} is composed of the \( 160 \times 160 \) faces of each sample in the given \texttt{Celeb-DF} dataset. 
-
-Both, training and evaluation sets can be found in (files).
+Having aumented our data, we followed different approaches in order to find and optimize the most suitable technique for this problem. In all cases the \textbf{training dataset} was composed of \( 1829 \) \( 160\times 160 \) face samples, and the \textbf{evaluation dataset} was composed of the \( 160 \times 160 \) face crops of each sample (out of 600) in the given \texttt{Celeb-DF} dataset. Although the MTCNN face detector remains an essential part of our model architecture, we saved the cropped faces to disk and worked only with them to increase the computational efficiency.
 
 \subsection*{Train the same model with more data}
 
-In this attempt, we aimed to check how the best model of the previous task behaved in this one. This approach is used to set a \emph{starting line} to be compared to the subsequent attempts.
+First of all, we wanted to check how the best model found of the previous task behaved with this new training dataset, and set a \emph{baseline} to be compared to the subsequent attempts.
 
-The procedure was simple and can be seen in \texttt{Task3\_ML.ipynb}, we reused part of the code developed for the previous task and create a pipeline with the optimal classifier. The AUC obtained using this approach is 0.67.
+The procedure was simple and can be seen in the notebook \texttt{Task3\_ML.ipynb}. We reused the majority of the code developed for the previous task and created a pipeline with the optimal classifier. The AUC obtained using this approach was 0.67, which is only a bit better that what we had before.
 
 \subsection*{Consider alternative features}
 
-In this approach we intended to use \texttt{Facenet} (\cite{Schroff_2015}) to obtain a more representative set of features compared to the ones computed by \texttt{dlib}. To this end, we took a pre-trained model of Facenet that performed an embedding to \( 128 \) features and used these to train and cross-validate the same models considered in Task 1.
+In this approach we intended to use \texttt{FaceNet} \citep{Schroff_2015} to obtain a more representative set of features for each face. To this end, we took a pre-trained model of FaceNet\footnote{\url{https://github.com/nyoki-mtl/keras-facenet}} that computed a face embedding to \( 128 \) features, and used these features \textbf{along with the landmarks intensities} to train and cross-validate the same families of models considered in Task 1. A small change that we make is that we stop randomly blurring the training images, since we observed that it could heavily distort the embedding and worsen the performance of the final model.
 
-As a result, the chosen model was a RBF SVM with regularization term \( C = 4.6415 \) and kernel length \( \gamma = 0.01668 \), giving an AUC of \( 0.7 \) on the evaluation dataset.
+The resulting best model was again the SVM with RBF kernel, using a regularization term \( C = 4.6415 \) and a kernel parameter \( \gamma = 0.0167 \). The AUC score on the evaluation dataset was \( 0.7 \), which is better than our baseline model.
 
-This approach can be consulted in \texttt{Task3\_Facenet.ipynb}.
+The code for this strategy can be consulted in \texttt{Task3\_Facenet.ipynb}.
 
 \subsection*{Train a deep learning model from scratch}
 
+In this attempt we wanted to take advantage of the increased number of samples in the training dataset to use a \emph{deep-but-not-so-deep} convolutional neural network for the classification task. We considered a simple model consisting on  two blocks of convolution-activation-dropout-pooling and two fully connected layers at the end, the last one being a sigmoid with only one unit. We also used data augmentation techniques such as random rotations or horizontal flipping as an extra regularization layer.
 
-In this attempt we wanted to take advantage of the increased number fo samples in the training dataset to use a \emph{not so deep} convolutional network for the classification task. We considered two blocks of convolution-activation-dropout and 2 fully connected layers for the model.  
-
-In the end, after tunning the parameters for a while, the model either overfitted to the training dataset or did not learn at all. The general structure can be found at \texttt{Task3\_DL.ipynb}
+However, after tuning the parameters for a while using a validation set and the early stopping technique, the model either overfitted to the training dataset or did not learn at all, so we discarded this approach altogether. The general structure with our experiments can be found in \texttt{Task3\_DL.ipynb}.
 
 \subsection*{Fine-tune a pre-trained deep learning model}
 
+As out last attempt, we aimed to fine-tune a pre-trained deep neural network. We thought that we could benefit from a large network that was already trained on a big database, and perform transfer learning to try to solve our detection problem. We used the \texttt{Keras} API, and the steps followed were\footnote{We followed the recommendations in \url{https://keras.io/guides/transfer_learning/}}:
 
-As out last attempt, we aimed to fine-tune a pre-trained deep neural network. To this end, we tested several well-known models as VGG19, XceptionNet..., dropped the last layers and used a pair of fully connected layers to make the classification. The aim is to use the higher feature extraction  potential of those pre-trained models and make a classification with them.
+\begin{enumerate}
+  \item We loaded a CNN pre-trained on the ImageNet database \citep{deng2009imagenet}.  We tested several well-known models such as VGG19, ResNet50, InceptionV3, XceptionNet...
+  \item We dropped the top layers that act as a classifier, and put a small fully connected model of our choosing instead.
+  \item We train \textbf{only the top layers} on our dataset for a few epochs, so that the weights are correctly initialized and are not random. This is done to avoid disturbing the previously tuned weights of the base model.
+  \item \textbf{We unfreeze the last convolutional block of the base model} and train with a small learning rate to perform the actual fine-tuning of the network. We don't unfreeze the whole network because the initial layers act as a coarse feature extractor, and our hypothesis was that the images on ImageNet share the same lower level features as our images. It is only on the last layers of the network that features close to our deepfake detection problem are learned, and that is where we put our efforts. Moreover, if we trained the whole network we would almost certainly incur in overfitting, since we have a very limited quantity of training data.
+\end{enumerate}
 
-In order to fine-tune de model, we froze the layers from the pre-trained model and trained the full one just a few epochs. The objective is that the final new layers learn to use the features to the new classification task. After this, we defroze all the layers and trained the full model for several epochs.
+We retain the random data augmentation technique from previous attempts, but we do not consider a validation set in this case, to try and make the most out of our few training examples. After some tries, the best configuration found was as follows:
 
-In the end, the pre-trained model that performed the best is VGG19 (\cite{simonyan2015deep}) with 3 initial epochs followed by another 15 (\texttt{Task3\_Finetune.ipynb}).
+\begin{itemize}
+  \item The chosen base model was the VGG19 network \citep{simonyan2015deep}. We needed to add a preliminary preprocessing step to accomodate the images to VGG19's expectations (using the function \texttt{vgg19.preprocess\_input}).
+  \item The top model chosen was a small model consisting on two fully connected layers with ReLu activation and 512 and 256 units, respectively, with a Dropout layer of $0.25$ after the first and one of $0.5$ after the second. The Dropout layers are regularizing layers that ``turn off'' a fraction of the neurons during training, to force the model to learn more relevant features. At the end we put a Dense layer with one unit and sigmoid activation to obtain the probabilities of fake and real.
+  \item We trained the top model for 3 epochs, and then unfroze the last convolutional block of VGG19 and trained for 15 more epochs, in this case using the SGD optimizer with a learning rate of $5\cdot 10^{-4}$.
+\end{itemize}
+
+The code developed can be consulted in the notebook \texttt{Task3\_Finetune.ipynb}.
 
 \textbf{b)} \textit{Describe the results achieved by your enhanced DeepFake detection system over the final evaluation dataset. Show the results achieved in terms of ROC curve and AUC. Provide an explanation of your results in comparison with the results of Task 2.}
 
-Final graph (AUC 0.81).
+After evaluating the trained model on the evaluation dataset, we obtained a shocking AUC score of $0.8107$ , whose corresponding ROC curve can be seen in Figure \ref{fig:t3}. It turns out that this fine-tuning approach was the best way of enhancing our model, and we improved the results of Task 2 by almost 20 percentage points.
 
 \begin{figure}[h!]
   \centering
@@ -205,9 +214,17 @@ Final graph (AUC 0.81).
 
 \textbf{c)} \textit{Indicate the conclusions and possible future improvements}.
 
-Not enough data; finetuning is essential; Deep learning outperforms classical approaches when used appropriately.
+The conclusions we draw from this assignment are summarized below:
 
-face align, face masks, one-to-many, many-to-one, (eye, mouth, teeth,... more fine grained approach to feature extraction.)
+\begin{itemize}
+  \item DeepFake detection is a challenging task, especially when there are more and more high-quality fakes that even humans have a hard time detecting. The fact that we train on a specific database and obtain good results is not a guarantee that the model will generalize to different databases.
+  \item Feature extraction is a key part of the process, and the more relevant and accurate features we obtain, the better the performance of our final model.
+  \item While we can obtain a decent performance using machine learning techniques, deep learning outperforms classical approaches when used appropriately.
+  \item Deep learning is an excellent way to perform a sort of automatic feature extraction, letting the network learn which features are relevant for the specific task of deepfake detection. However, for this approach to succeed we generally need a large amount of training data.
+  \item We can overcome the need for many training images using transfer learning and fine-tuning a pre-trained network, but we have to pay close attention to the process and employ a suite of regularization techniques to avoid overfitting.
+\end{itemize}
+
+As a final comment, we considered some alternative approaches to feature extraction, but we didn't have time to implement them. For example, we thought it would be a good idea to obtain specific masks for different parts of the face, such as eyes, teeth, nose, etc, and in general to adopt a more fine-grained approach when it comes to feature extraction. Moreover, it would be good to have an in-depth look at how deepfakes are usually generated (using GANs), and then try to exploit any weaknesses in the process to improve our detection performance.
 
 %%%%%%%%%%%%%%%%
 %% Bibliography
