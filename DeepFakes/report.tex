@@ -9,9 +9,7 @@
 \usepackage{amsmath}
 \usepackage{textcomp}
 \usepackage{amssymb}
-\usepackage{capt-of}
-\usepackage{hyperref}
-\hypersetup{colorlinks=true, linkcolor=magenta, citecolor=cyan}
+%\usepackage{capt-of}
 \setlength{\parindent}{0in}
 \usepackage[margin=1in]{geometry}
 \usepackage[english]{babel}
@@ -26,7 +24,7 @@
 \usepackage{subcaption}
 \usepackage{setspace}
 %\usepackage[center]{caption}
-\usepackage{placeins}
+%\usepackage{placeins}
 \usepackage{color}
 \usepackage{amsmath}
 \usepackage{bm}
@@ -36,7 +34,8 @@
 %\titlespacing*{\section}{0pt}{5.5ex}{1ex}
 \usepackage{natbib}
 \setcitestyle{authoryear,aysep={,}}
-
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=magenta, citecolor=cyan}
 \author{Luis Antonio Ortega Andrés\\Antonio Coín Castro}
 \date{\today}
 \title{DeepFakes Detection Lab - Report}
@@ -67,7 +66,7 @@ First of all, the given images from UADFV have been preprocessed following these
 \begin{enumerate}
   \item The data is loaded using \texttt{Keras}' \texttt{flow\_from\_directory} function \citep{chollet2015keras}, so that we don't have to keep all images in memory while training our model. We resize each image to a resolution of $768\times 768$.
   \item We use the MTCNN face detector \citep{zhang2016joint} in order to crop the section of the image that contains the face. The aim of this phase is to erase those parts of the image that are not relevant for our classification task.
-  \item We add random noise to the images as a form of regularization, to force our classifier to learn more relevant features. More precisely, we randomly decide wether the image is slightly blurred using a Gaussian filter from OpenCV \citep{opencv_library}, or simply perturbed by Gaussian noise. Each of these outcomes is equally likely and every image goes through one or the other, but never both. Note that these perturbations are only applied to training samples and not to the evaluation images.
+  \item We add random noise to the images as a form of regularization, to force our classifier to learn more relevant features. More precisely, we randomly decide whether the image is slightly blurred using a Gaussian filter from OpenCV \citep{opencv_library}, or simply perturbed by Gaussian noise. Each of these outcomes is equally likely and every image goes through one or the other, but never both. Note that these perturbations are only applied to training samples and not to the evaluation images.
 \end{enumerate}
 
 \subsection*{Feature extraction}
